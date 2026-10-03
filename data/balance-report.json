@@ -1,0 +1,45 @@
+{
+  "configVersion": "balance-1",
+  "seed": "balance-v1",
+  "gamesPerRarity": 2000,
+  "correctProbability": 0.6,
+  "maxTurns": 200,
+  "results": [
+    {
+      "rarity": "common",
+      "games": 2000,
+      "wins": 978,
+      "draws": 0,
+      "winRate": 0.489
+    },
+    {
+      "rarity": "uncommon",
+      "games": 2000,
+      "wins": 978,
+      "draws": 0,
+      "winRate": 0.489
+    },
+    {
+      "rarity": "rare",
+      "games": 2000,
+      "wins": 883,
+      "draws": 28,
+      "winRate": 0.4415
+    },
+    {
+      "rarity": "epic",
+      "games": 2000,
+      "wins": 952,
+      "draws": 27,
+      "winRate": 0.476
+    },
+    {
+      "rarity": "legendary",
+      "games": 2000,
+      "wins": 1123,
+      "draws": 14,
+      "winRate": 0.5615
+    }
+  ],
+  "limitations": "Seeded 1v1 probe against Common, alternating first move, equal trivia accuracy, independent identical stat ranges, all 7 types and all passives/effects. Greedy expected-value move policy. Splash has no adjacent targets here; this is not evidence of five-card balance. No question exhaustion modeled. Validate team play and player knowledge separately."
+}

@@ -1,0 +1,14 @@
+{
+  "version": "types-1",
+  "neutral": 1,
+  "strong": 1.25,
+  "weak": 0.8,
+  "counters": {
+    "science": "nature",
+    "nature": "technology",
+    "technology": "history",
+    "history": "culture",
+    "culture": "geography",
+    "geography": "science"
+  }
+}

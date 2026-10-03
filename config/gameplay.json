@@ -1,0 +1,80 @@
+{
+  "version": "balance-1",
+  "generationVersion": "generator-1",
+  "hp": [95, 105],
+  "defense": [4, 8],
+  "standardPower": [30, 40],
+  "specialPower": [27, 33],
+  "effects": {
+    "burn": {
+      "damage": 5,
+      "turns": 2
+    },
+    "heal": {
+      "hp": 10
+    },
+    "pierce": {},
+    "weaken": {
+      "multiplier": 0.8
+    },
+    "splash": {
+      "fraction": 0.2
+    }
+  },
+  "passives": {
+    "stalwart": {
+      "multiplier": 0.95
+    },
+    "recovery": {
+      "hp": 5,
+      "threshold": 0.4
+    },
+    "immune": {}
+  },
+  "battle": {
+    "teamSize": 5,
+    "correctMultiplier": 0.5,
+    "incorrectMultiplier": 1,
+    "exhaustedMultiplier": 0.5,
+    "exhaustedEffects": false,
+    "minimumDamage": 1
+  },
+  "trivia": {
+    "target": 12,
+    "min": 10,
+    "max": 15,
+    "extraCandidates": 6,
+    "attempts": 3,
+    "nearDuplicateThreshold": 0.8
+  },
+  "ingestion": {
+    "minWords": 500,
+    "minParagraphs": 5,
+    "minProseFraction": 0.35,
+    "pageviewDays": 90,
+    "pageviewDelayRetries": 3
+  },
+  "rarity": {
+    "version": "views-percentile-1",
+    "minPopulation": 30,
+    "tiers": [
+      ["legendary", 0.05],
+      ["epic", 0.15],
+      ["rare", 0.35],
+      ["uncommon", 0.65],
+      ["common", 1]
+    ]
+  },
+  "http": {
+    "attempts": 4,
+    "timeoutMs": 60000,
+    "intervalMs": 250,
+    "backoffMs": 1000
+  },
+  "model": {
+    "temperature": 0.2,
+    "maxTokens": 16000,
+    "schemaAttempts": 2,
+    "maxSourceChars": 100000
+  }
+}

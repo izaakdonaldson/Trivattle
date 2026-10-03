@@ -1,0 +1,1545 @@
+{
+  "notice": "SYNTHETIC DEVELOPMENT FIXTURES. These titles, IDs, revisions, prose, and trivia are invented for tests, not real Wikipedia articles or verified playable cards. Never import into a published catalogue.",
+  "cards": [
+    {
+      "card": {
+        "id": "enwiki:900001",
+        "versionId": "fixture:900001:common:A",
+        "pageId": 900001,
+        "sourceKey": "900001:1",
+        "name": "Fixture Observatory 900001",
+        "type": "science",
+        "rarity": "common",
+        "hp": 102,
+        "defense": 6,
+        "attacks": [
+          {
+            "id": "fixture:900001:common:attack:0",
+            "name": "Observatory lens 1",
+            "description": "Fictional lens attack for development fixtures.",
+            "type": "science",
+            "power": 36,
+            "effectId": null,
+            "effectParameters": null
+          }
+        ],
+        "passive": null,
+        "rarityAssignment": {
+          "rarity": "common",
+          "score": 100,
+          "percentile": 0.5,
+          "version": "fixture-only",
+          "populationId": "fixture-only"
+        },
+        "generationVersion": "generator-1",
+        "balanceVersion": "balance-1",
+        "status": "fixture",
+        "questionIds": [
+          "enwiki:900001:q:361576cb8487e7a7a64b",
+          "enwiki:900001:q:006158bf4ed9617c5034",
+          "enwiki:900001:q:bd7ed7d2821370b0a058",
+          "enwiki:900001:q:179f660a35248ec407c2",
+          "enwiki:900001:q:e995c8eb7d1bf0cbac9d",
+          "enwiki:900001:q:9ee6aa6d7055edc0d9db",
+          "enwiki:900001:q:4997293abca734856f05",
+          "enwiki:900001:q:4a9f1a45479cd83dd9d0",
+          "enwiki:900001:q:5123206de92dff87b682",
+          "enwiki:900001:q:defd6166a6b28a218934",
+          "enwiki:900001:q:70970b6d65fb4bbc6b1e",
+          "enwiki:900001:q:1fa3000b8058351c086a"
+        ],
+        "createdAt": "2026-10-01T00:00:00.000Z"
+      },
+      "wikipedia": {
+        "pageId": 900001,
+        "title": "Fixture Observatory 900001",
+        "url": "https://en.wikipedia.org/wiki/Fixture_Observatory_900001",
+        "revisionId": 1,
+        "wikidataId": null,
+        "summary": "A fictional scientific observatory used only for deterministic tests.",
+        "text": "The observatory dome is built from Copper.\n\nThe west entrance was designed by Mira.\n\nThe archive opens each year in April.\n\nThe institute emblem depicts an Otter.\n\nThe north tower houses a Telescope.\n\nThe laboratory floor has an Amber color.\n\nThe research grounds border the Tarn river.\n\nThe courtyard orchard grows the Pear fruit.\n\nThe lecture hall has a name in Latin.\n\nThe monument base consists of Granite.\n\nThe academy anthem was composed by Orin.\n\nThe library reading room is shaped as a Hexagon.",
+        "wordCount": 600,
+        "categories": [
+          "Science"
+        ],
+        "fetchedAt": "2026-10-01T00:00:00.000Z",
+        "image": null,
+        "textLicense": "Synthetic test data, not Wikipedia content",
+        "discovery": "random"
+      },
+      "trivia": [
+        {
+          "id": "enwiki:900001:q:361576cb8487e7a7a64b",
+          "pageId": 900001,
+          "sourceUrl": "https://en.wikipedia.org/wiki/Fixture_Observatory_900001",
+          "revisionId": 1,
+          "text": "What material forms the fictional observatory dome?",
+          "options": [
+            "Copper",
+            "Alternative 0 A",
+            "Alternative 0 B",
+            "Alternative 0 C"
+          ],
+          "correctIndex": 0,
+          "explanation": "The observatory dome is built from Copper.",
+          "evidence": "The observatory dome is built from Copper.",
+          "factKey": "independent-fact-0",
+          "validation": "validated",
+          "quality": 1
+        },
+        {
+          "id": "enwiki:900001:q:006158bf4ed9617c5034",
+          "pageId": 900001,
+          "sourceUrl": "https://en.wikipedia.org/wiki/Fixture_Observatory_900001",
+          "revisionId": 1,
+          "text": "Which fictional architect designed the west entrance?",
+          "options": [
+            "Mira",
+            "Alternative 1 A",
+            "Alternative 1 B",
+            "Alternative 1 C"
+          ],
+          "correctIndex": 0,
+          "explanation": "The west entrance was designed by Mira.",
+          "evidence": "The west entrance was designed by Mira.",
+          "factKey": "independent-fact-1",
+          "validation": "validated",
+          "quality": 1
+        },
+        {
+          "id": "enwiki:900001:q:bd7ed7d2821370b0a058",
+          "pageId": 900001,
+          "sourceUrl": "https://en.wikipedia.org/wiki/Fixture_Observatory_900001",
+          "revisionId": 1,
+          "text": "In what month does the fictional archive open?",
+          "options": [
+            "April",
+            "Alternative 2 A",
+            "Alternative 2 B",
+            "Alternative 2 C"
+          ],
+          "correctIndex": 0,
+          "explanation": "The archive opens each year in April.",
+          "evidence": "The archive opens each year in April.",
+          "factKey": "independent-fact-2",
+          "validation": "validated",
+          "quality": 1
+        },
+        {
+          "id": "enwiki:900001:q:179f660a35248ec407c2",
+          "pageId": 900001,
+          "sourceUrl": "https://en.wikipedia.org/wiki/Fixture_Observatory_900001",
+          "revisionId": 1,
+          "text": "What animal appears on the fictional institute emblem?",
+          "options": [
+            "Otter",
+            "Alternative 3 A",
+            "Alternative 3 B",
+            "Alternative 3 C"
+          ],
+          "correctIndex": 0,
+          "explanation": "The institute emblem depicts an Otter.",
+          "evidence": "The institute emblem depicts an Otter.",
+          "factKey": "independent-fact-3",
+          "validation": "validated",
+          "quality": 1
+        },
+        {
+          "id": "enwiki:900001:q:e995c8eb7d1bf0cbac9d",
+          "pageId": 900001,
+          "sourceUrl": "https://en.wikipedia.org/wiki/Fixture_Observatory_900001",
+          "revisionId": 1,
+          "text": "Which instrument is housed in the fictional north tower?",
+          "options": [
+            "Telescope",
+            "Alternative 4 A",
+            "Alternative 4 B",
+            "Alternative 4 C"
+          ],
+          "correctIndex": 0,
+          "explanation": "The north tower houses a Telescope.",
+          "evidence": "The north tower houses a Telescope.",
+          "factKey": "independent-fact-4",
+          "validation": "validated",
+          "quality": 1
+        },
+        {
+          "id": "enwiki:900001:q:9ee6aa6d7055edc0d9db",
+          "pageId": 900001,
+          "sourceUrl": "https://en.wikipedia.org/wiki/Fixture_Observatory_900001",
+          "revisionId": 1,
+          "text": "What color is the fictional laboratory floor?",
+          "options": [
+            "Amber",
+            "Alternative 5 A",
+            "Alternative 5 B",
+            "Alternative 5 C"
+          ],
+          "correctIndex": 0,
+          "explanation": "The laboratory floor has an Amber color.",
+          "evidence": "The laboratory floor has an Amber color.",
+          "factKey": "independent-fact-5",
+          "validation": "validated",
+          "quality": 1
+        },
+        {
+          "id": "enwiki:900001:q:4997293abca734856f05",
+          "pageId": 900001,
+          "sourceUrl": "https://en.wikipedia.org/wiki/Fixture_Observatory_900001",
+          "revisionId": 1,
+          "text": "Which river borders the fictional research grounds?",
+          "options": [
+            "Tarn",
+            "Alternative 6 A",
+            "Alternative 6 B",
+            "Alternative 6 C"
+          ],
+          "correctIndex": 0,
+          "explanation": "The research grounds border the Tarn river.",
+          "evidence": "The research grounds border the Tarn river.",
+          "factKey": "independent-fact-6",
+          "validation": "validated",
+          "quality": 1
+        },
+        {
+          "id": "enwiki:900001:q:4a9f1a45479cd83dd9d0",
+          "pageId": 900001,
+          "sourceUrl": "https://en.wikipedia.org/wiki/Fixture_Observatory_900001",
+          "revisionId": 1,
+          "text": "What fruit grows in the fictional courtyard orchard?",
+          "options": [
+            "Pear",
+            "Alternative 7 A",
+            "Alternative 7 B",
+            "Alternative 7 C"
+          ],
+          "correctIndex": 0,
+          "explanation": "The courtyard orchard grows the Pear fruit.",
+          "evidence": "The courtyard orchard grows the Pear fruit.",
+          "factKey": "independent-fact-7",
+          "validation": "validated",
+          "quality": 1
+        },
+        {
+          "id": "enwiki:900001:q:5123206de92dff87b682",
+          "pageId": 900001,
+          "sourceUrl": "https://en.wikipedia.org/wiki/Fixture_Observatory_900001",
+          "revisionId": 1,
+          "text": "Which language names the fictional lecture hall?",
+          "options": [
+            "Latin",
+            "Alternative 8 A",
+            "Alternative 8 B",
+            "Alternative 8 C"
+          ],
+          "correctIndex": 0,
+          "explanation": "The lecture hall has a name in Latin.",
+          "evidence": "The lecture hall has a name in Latin.",
+          "factKey": "independent-fact-8",
+          "validation": "validated",
+          "quality": 1
+        },
+        {
+          "id": "enwiki:900001:q:defd6166a6b28a218934",
+          "pageId": 900001,
+          "sourceUrl": "https://en.wikipedia.org/wiki/Fixture_Observatory_900001",
+          "revisionId": 1,
+          "text": "What rock forms the fictional monument base?",
+          "options": [
+            "Granite",
+            "Alternative 9 A",
+            "Alternative 9 B",
+            "Alternative 9 C"
+          ],
+          "correctIndex": 0,
+          "explanation": "The monument base consists of Granite.",
+          "evidence": "The monument base consists of Granite.",
+          "factKey": "independent-fact-9",
+          "validation": "validated",
+          "quality": 1
+        },
+        {
+          "id": "enwiki:900001:q:70970b6d65fb4bbc6b1e",
+          "pageId": 900001,
+          "sourceUrl": "https://en.wikipedia.org/wiki/Fixture_Observatory_900001",
+          "revisionId": 1,
+          "text": "Which musician composed the fictional academy anthem?",
+          "options": [
+            "Orin",
+            "Alternative 10 A",
+            "Alternative 10 B",
+            "Alternative 10 C"
+          ],
+          "correctIndex": 0,
+          "explanation": "The academy anthem was composed by Orin.",
+          "evidence": "The academy anthem was composed by Orin.",
+          "factKey": "independent-fact-10",
+          "validation": "validated",
+          "quality": 1
+        },
+        {
+          "id": "enwiki:900001:q:1fa3000b8058351c086a",
+          "pageId": 900001,
+          "sourceUrl": "https://en.wikipedia.org/wiki/Fixture_Observatory_900001",
+          "revisionId": 1,
+          "text": "What shape is the fictional library reading room?",
+          "options": [
+            "Hexagon",
+            "Alternative 11 A",
+            "Alternative 11 B",
+            "Alternative 11 C"
+          ],
+          "correctIndex": 0,
+          "explanation": "The library reading room is shaped as a Hexagon.",
+          "evidence": "The library reading room is shaped as a Hexagon.",
+          "factKey": "independent-fact-11",
+          "validation": "validated",
+          "quality": 1
+        }
+      ]
+    },
+    {
+      "card": {
+        "id": "enwiki:900002",
+        "versionId": "fixture:900002:uncommon:A",
+        "pageId": 900002,
+        "sourceKey": "900002:1",
+        "name": "Fixture Observatory 900002",
+        "type": "science",
+        "rarity": "uncommon",
+        "hp": 99,
+        "defense": 5,
+        "attacks": [
+          {
+            "id": "fixture:900002:uncommon:attack:0",
+            "name": "Observatory lens 1",
+            "description": "Fictional lens attack for development fixtures.",
+            "type": "science",
+            "power": 40,
+            "effectId": null,
+            "effectParameters": null
+          },
+          {
+            "id": "fixture:900002:uncommon:attack:1",
+            "name": "Observatory lens 2",
+            "description": "Fictional lens attack for development fixtures.",
+            "type": "science",
+            "power": 40,
+            "effectId": null,
+            "effectParameters": null
+          }
+        ],
+        "passive": null,
+        "rarityAssignment": {
+          "rarity": "uncommon",
+          "score": 100,
+          "percentile": 0.5,
+          "version": "fixture-only",
+          "populationId": "fixture-only"
+        },
+        "generationVersion": "generator-1",
+        "balanceVersion": "balance-1",
+        "status": "fixture",
+        "questionIds": [
+          "enwiki:900002:q:361576cb8487e7a7a64b",
+          "enwiki:900002:q:006158bf4ed9617c5034",
+          "enwiki:900002:q:bd7ed7d2821370b0a058",
+          "enwiki:900002:q:179f660a35248ec407c2",
+          "enwiki:900002:q:e995c8eb7d1bf0cbac9d",
+          "enwiki:900002:q:9ee6aa6d7055edc0d9db",
+          "enwiki:900002:q:4997293abca734856f05",
+          "enwiki:900002:q:4a9f1a45479cd83dd9d0",
+          "enwiki:900002:q:5123206de92dff87b682",
+          "enwiki:900002:q:defd6166a6b28a218934",
+          "enwiki:900002:q:70970b6d65fb4bbc6b1e",
+          "enwiki:900002:q:1fa3000b8058351c086a"
+        ],
+        "createdAt": "2026-10-01T00:00:00.000Z"
+      },
+      "wikipedia": {
+        "pageId": 900002,
+        "title": "Fixture Observatory 900002",
+        "url": "https://en.wikipedia.org/wiki/Fixture_Observatory_900002",
+        "revisionId": 1,
+        "wikidataId": null,
+        "summary": "A fictional scientific observatory used only for deterministic tests.",
+        "text": "The observatory dome is built from Copper.\n\nThe west entrance was designed by Mira.\n\nThe archive opens each year in April.\n\nThe institute emblem depicts an Otter.\n\nThe north tower houses a Telescope.\n\nThe laboratory floor has an Amber color.\n\nThe research grounds border the Tarn river.\n\nThe courtyard orchard grows the Pear fruit.\n\nThe lecture hall has a name in Latin.\n\nThe monument base consists of Granite.\n\nThe academy anthem was composed by Orin.\n\nThe library reading room is shaped as a Hexagon.",
+        "wordCount": 600,
+        "categories": [
+          "Science"
+        ],
+        "fetchedAt": "2026-10-01T00:00:00.000Z",
+        "image": null,
+        "textLicense": "Synthetic test data, not Wikipedia content",
+        "discovery": "curated"
+      },
+      "trivia": [
+        {
+          "id": "enwiki:900002:q:361576cb8487e7a7a64b",
+          "pageId": 900002,
+          "sourceUrl": "https://en.wikipedia.org/wiki/Fixture_Observatory_900002",
+          "revisionId": 1,
+          "text": "What material forms the fictional observatory dome?",
+          "options": [
+            "Copper",
+            "Alternative 0 A",
+            "Alternative 0 B",
+            "Alternative 0 C"
+          ],
+          "correctIndex": 0,
+          "explanation": "The observatory dome is built from Copper.",
+          "evidence": "The observatory dome is built from Copper.",
+          "factKey": "independent-fact-0",
+          "validation": "validated",
+          "quality": 1
+        },
+        {
+          "id": "enwiki:900002:q:006158bf4ed9617c5034",
+          "pageId": 900002,
+          "sourceUrl": "https://en.wikipedia.org/wiki/Fixture_Observatory_900002",
+          "revisionId": 1,
+          "text": "Which fictional architect designed the west entrance?",
+          "options": [
+            "Mira",
+            "Alternative 1 A",
+            "Alternative 1 B",
+            "Alternative 1 C"
+          ],
+          "correctIndex": 0,
+          "explanation": "The west entrance was designed by Mira.",
+          "evidence": "The west entrance was designed by Mira.",
+          "factKey": "independent-fact-1",
+          "validation": "validated",
+          "quality": 1
+        },
+        {
+          "id": "enwiki:900002:q:bd7ed7d2821370b0a058",
+          "pageId": 900002,
+          "sourceUrl": "https://en.wikipedia.org/wiki/Fixture_Observatory_900002",
+          "revisionId": 1,
+          "text": "In what month does the fictional archive open?",
+          "options": [
+            "April",
+            "Alternative 2 A",
+            "Alternative 2 B",
+            "Alternative 2 C"
+          ],
+          "correctIndex": 0,
+          "explanation": "The archive opens each year in April.",
+          "evidence": "The archive opens each year in April.",
+          "factKey": "independent-fact-2",
+          "validation": "validated",
+          "quality": 1
+        },
+        {
+          "id": "enwiki:900002:q:179f660a35248ec407c2",
+          "pageId": 900002,
+          "sourceUrl": "https://en.wikipedia.org/wiki/Fixture_Observatory_900002",
+          "revisionId": 1,
+          "text": "What animal appears on the fictional institute emblem?",
+          "options": [
+            "Otter",
+            "Alternative 3 A",
+            "Alternative 3 B",
+            "Alternative 3 C"
+          ],
+          "correctIndex": 0,
+          "explanation": "The institute emblem depicts an Otter.",
+          "evidence": "The institute emblem depicts an Otter.",
+          "factKey": "independent-fact-3",
+          "validation": "validated",
+          "quality": 1
+        },
+        {
+          "id": "enwiki:900002:q:e995c8eb7d1bf0cbac9d",
+          "pageId": 900002,
+          "sourceUrl": "https://en.wikipedia.org/wiki/Fixture_Observatory_900002",
+          "revisionId": 1,
+          "text": "Which instrument is housed in the fictional north tower?",
+          "options": [
+            "Telescope",
+            "Alternative 4 A",
+            "Alternative 4 B",
+            "Alternative 4 C"
+          ],
+          "correctIndex": 0,
+          "explanation": "The north tower houses a Telescope.",
+          "evidence": "The north tower houses a Telescope.",
+          "factKey": "independent-fact-4",
+          "validation": "validated",
+          "quality": 1
+        },
+        {
+          "id": "enwiki:900002:q:9ee6aa6d7055edc0d9db",
+          "pageId": 900002,
+          "sourceUrl": "https://en.wikipedia.org/wiki/Fixture_Observatory_900002",
+          "revisionId": 1,
+          "text": "What color is the fictional laboratory floor?",
+          "options": [
+            "Amber",
+            "Alternative 5 A",
+            "Alternative 5 B",
+            "Alternative 5 C"
+          ],
+          "correctIndex": 0,
+          "explanation": "The laboratory floor has an Amber color.",
+          "evidence": "The laboratory floor has an Amber color.",
+          "factKey": "independent-fact-5",
+          "validation": "validated",
+          "quality": 1
+        },
+        {
+          "id": "enwiki:900002:q:4997293abca734856f05",
+          "pageId": 900002,
+          "sourceUrl": "https://en.wikipedia.org/wiki/Fixture_Observatory_900002",
+          "revisionId": 1,
+          "text": "Which river borders the fictional research grounds?",
+          "options": [
+            "Tarn",
+            "Alternative 6 A",
+            "Alternative 6 B",
+            "Alternative 6 C"
+          ],
+          "correctIndex": 0,
+          "explanation": "The research grounds border the Tarn river.",
+          "evidence": "The research grounds border the Tarn river.",
+          "factKey": "independent-fact-6",
+          "validation": "validated",
+          "quality": 1
+        },
+        {
+          "id": "enwiki:900002:q:4a9f1a45479cd83dd9d0",
+          "pageId": 900002,
+          "sourceUrl": "https://en.wikipedia.org/wiki/Fixture_Observatory_900002",
+          "revisionId": 1,
+          "text": "What fruit grows in the fictional courtyard orchard?",
+          "options": [
+            "Pear",
+            "Alternative 7 A",
+            "Alternative 7 B",
+            "Alternative 7 C"
+          ],
+          "correctIndex": 0,
+          "explanation": "The courtyard orchard grows the Pear fruit.",
+          "evidence": "The courtyard orchard grows the Pear fruit.",
+          "factKey": "independent-fact-7",
+          "validation": "validated",
+          "quality": 1
+        },
+        {
+          "id": "enwiki:900002:q:5123206de92dff87b682",
+          "pageId": 900002,
+          "sourceUrl": "https://en.wikipedia.org/wiki/Fixture_Observatory_900002",
+          "revisionId": 1,
+          "text": "Which language names the fictional lecture hall?",
+          "options": [
+            "Latin",
+            "Alternative 8 A",
+            "Alternative 8 B",
+            "Alternative 8 C"
+          ],
+          "correctIndex": 0,
+          "explanation": "The lecture hall has a name in Latin.",
+          "evidence": "The lecture hall has a name in Latin.",
+          "factKey": "independent-fact-8",
+          "validation": "validated",
+          "quality": 1
+        },
+        {
+          "id": "enwiki:900002:q:defd6166a6b28a218934",
+          "pageId": 900002,
+          "sourceUrl": "https://en.wikipedia.org/wiki/Fixture_Observatory_900002",
+          "revisionId": 1,
+          "text": "What rock forms the fictional monument base?",
+          "options": [
+            "Granite",
+            "Alternative 9 A",
+            "Alternative 9 B",
+            "Alternative 9 C"
+          ],
+          "correctIndex": 0,
+          "explanation": "The monument base consists of Granite.",
+          "evidence": "The monument base consists of Granite.",
+          "factKey": "independent-fact-9",
+          "validation": "validated",
+          "quality": 1
+        },
+        {
+          "id": "enwiki:900002:q:70970b6d65fb4bbc6b1e",
+          "pageId": 900002,
+          "sourceUrl": "https://en.wikipedia.org/wiki/Fixture_Observatory_900002",
+          "revisionId": 1,
+          "text": "Which musician composed the fictional academy anthem?",
+          "options": [
+            "Orin",
+            "Alternative 10 A",
+            "Alternative 10 B",
+            "Alternative 10 C"
+          ],
+          "correctIndex": 0,
+          "explanation": "The academy anthem was composed by Orin.",
+          "evidence": "The academy anthem was composed by Orin.",
+          "factKey": "independent-fact-10",
+          "validation": "validated",
+          "quality": 1
+        },
+        {
+          "id": "enwiki:900002:q:1fa3000b8058351c086a",
+          "pageId": 900002,
+          "sourceUrl": "https://en.wikipedia.org/wiki/Fixture_Observatory_900002",
+          "revisionId": 1,
+          "text": "What shape is the fictional library reading room?",
+          "options": [
+            "Hexagon",
+            "Alternative 11 A",
+            "Alternative 11 B",
+            "Alternative 11 C"
+          ],
+          "correctIndex": 0,
+          "explanation": "The library reading room is shaped as a Hexagon.",
+          "evidence": "The library reading room is shaped as a Hexagon.",
+          "factKey": "independent-fact-11",
+          "validation": "validated",
+          "quality": 1
+        }
+      ]
+    },
+    {
+      "card": {
+        "id": "enwiki:900003",
+        "versionId": "fixture:900003:rare:A",
+        "pageId": 900003,
+        "sourceKey": "900003:1",
+        "name": "Fixture Observatory 900003",
+        "type": "science",
+        "rarity": "rare",
+        "hp": 105,
+        "defense": 8,
+        "attacks": [
+          {
+            "id": "fixture:900003:rare:attack:0",
+            "name": "Observatory lens 1",
+            "description": "Fictional lens attack for development fixtures.",
+            "type": "science",
+            "power": 28,
+            "effectId": "pierce",
+            "effectParameters": {}
+          },
+          {
+            "id": "fixture:900003:rare:attack:1",
+            "name": "Observatory lens 2",
+            "description": "Fictional lens attack for development fixtures.",
+            "type": "science",
+            "power": 40,
+            "effectId": null,
+            "effectParameters": null
+          }
+        ],
+        "passive": {
+          "id": "stalwart"
+        },
+        "rarityAssignment": {
+          "rarity": "rare",
+          "score": 100,
+          "percentile": 0.5,
+          "version": "fixture-only",
+          "populationId": "fixture-only"
+        },
+        "generationVersion": "generator-1",
+        "balanceVersion": "balance-1",
+        "status": "fixture",
+        "questionIds": [
+          "enwiki:900003:q:361576cb8487e7a7a64b",
+          "enwiki:900003:q:006158bf4ed9617c5034",
+          "enwiki:900003:q:bd7ed7d2821370b0a058",
+          "enwiki:900003:q:179f660a35248ec407c2",
+          "enwiki:900003:q:e995c8eb7d1bf0cbac9d",
+          "enwiki:900003:q:9ee6aa6d7055edc0d9db",
+          "enwiki:900003:q:4997293abca734856f05",
+          "enwiki:900003:q:4a9f1a45479cd83dd9d0",
+          "enwiki:900003:q:5123206de92dff87b682",
+          "enwiki:900003:q:defd6166a6b28a218934",
+          "enwiki:900003:q:70970b6d65fb4bbc6b1e",
+          "enwiki:900003:q:1fa3000b8058351c086a"
+        ],
+        "createdAt": "2026-10-01T00:00:00.000Z"
+      },
+      "wikipedia": {
+        "pageId": 900003,
+        "title": "Fixture Observatory 900003",
+        "url": "https://en.wikipedia.org/wiki/Fixture_Observatory_900003",
+        "revisionId": 1,
+        "wikidataId": null,
+        "summary": "A fictional scientific observatory used only for deterministic tests.",
+        "text": "The observatory dome is built from Copper.\n\nThe west entrance was designed by Mira.\n\nThe archive opens each year in April.\n\nThe institute emblem depicts an Otter.\n\nThe north tower houses a Telescope.\n\nThe laboratory floor has an Amber color.\n\nThe research grounds border the Tarn river.\n\nThe courtyard orchard grows the Pear fruit.\n\nThe lecture hall has a name in Latin.\n\nThe monument base consists of Granite.\n\nThe academy anthem was composed by Orin.\n\nThe library reading room is shaped as a Hexagon.",
+        "wordCount": 600,
+        "categories": [
+          "Science"
+        ],
+        "fetchedAt": "2026-10-01T00:00:00.000Z",
+        "image": null,
+        "textLicense": "Synthetic test data, not Wikipedia content",
+        "discovery": "random"
+      },
+      "trivia": [
+        {
+          "id": "enwiki:900003:q:361576cb8487e7a7a64b",
+          "pageId": 900003,
+          "sourceUrl": "https://en.wikipedia.org/wiki/Fixture_Observatory_900003",
+          "revisionId": 1,
+          "text": "What material forms the fictional observatory dome?",
+          "options": [
+            "Copper",
+            "Alternative 0 A",
+            "Alternative 0 B",
+            "Alternative 0 C"
+          ],
+          "correctIndex": 0,
+          "explanation": "The observatory dome is built from Copper.",
+          "evidence": "The observatory dome is built from Copper.",
+          "factKey": "independent-fact-0",
+          "validation": "validated",
+          "quality": 1
+        },
+        {
+          "id": "enwiki:900003:q:006158bf4ed9617c5034",
+          "pageId": 900003,
+          "sourceUrl": "https://en.wikipedia.org/wiki/Fixture_Observatory_900003",
+          "revisionId": 1,
+          "text": "Which fictional architect designed the west entrance?",
+          "options": [
+            "Mira",
+            "Alternative 1 A",
+            "Alternative 1 B",
+            "Alternative 1 C"
+          ],
+          "correctIndex": 0,
+          "explanation": "The west entrance was designed by Mira.",
+          "evidence": "The west entrance was designed by Mira.",
+          "factKey": "independent-fact-1",
+          "validation": "validated",
+          "quality": 1
+        },
+        {
+          "id": "enwiki:900003:q:bd7ed7d2821370b0a058",
+          "pageId": 900003,
+          "sourceUrl": "https://en.wikipedia.org/wiki/Fixture_Observatory_900003",
+          "revisionId": 1,
+          "text": "In what month does the fictional archive open?",
+          "options": [
+            "April",
+            "Alternative 2 A",
+            "Alternative 2 B",
+            "Alternative 2 C"
+          ],
+          "correctIndex": 0,
+          "explanation": "The archive opens each year in April.",
+          "evidence": "The archive opens each year in April.",
+          "factKey": "independent-fact-2",
+          "validation": "validated",
+          "quality": 1
+        },
+        {
+          "id": "enwiki:900003:q:179f660a35248ec407c2",
+          "pageId": 900003,
+          "sourceUrl": "https://en.wikipedia.org/wiki/Fixture_Observatory_900003",
+          "revisionId": 1,
+          "text": "What animal appears on the fictional institute emblem?",
+          "options": [
+            "Otter",
+            "Alternative 3 A",
+            "Alternative 3 B",
+            "Alternative 3 C"
+          ],
+          "correctIndex": 0,
+          "explanation": "The institute emblem depicts an Otter.",
+          "evidence": "The institute emblem depicts an Otter.",
+          "factKey": "independent-fact-3",
+          "validation": "validated",
+          "quality": 1
+        },
+        {
+          "id": "enwiki:900003:q:e995c8eb7d1bf0cbac9d",
+          "pageId": 900003,
+          "sourceUrl": "https://en.wikipedia.org/wiki/Fixture_Observatory_900003",
+          "revisionId": 1,
+          "text": "Which instrument is housed in the fictional north tower?",
+          "options": [
+            "Telescope",
+            "Alternative 4 A",
+            "Alternative 4 B",
+            "Alternative 4 C"
+          ],
+          "correctIndex": 0,
+          "explanation": "The north tower houses a Telescope.",
+          "evidence": "The north tower houses a Telescope.",
+          "factKey": "independent-fact-4",
+          "validation": "validated",
+          "quality": 1
+        },
+        {
+          "id": "enwiki:900003:q:9ee6aa6d7055edc0d9db",
+          "pageId": 900003,
+          "sourceUrl": "https://en.wikipedia.org/wiki/Fixture_Observatory_900003",
+          "revisionId": 1,
+          "text": "What color is the fictional laboratory floor?",
+          "options": [
+            "Amber",
+            "Alternative 5 A",
+            "Alternative 5 B",
+            "Alternative 5 C"
+          ],
+          "correctIndex": 0,
+          "explanation": "The laboratory floor has an Amber color.",
+          "evidence": "The laboratory floor has an Amber color.",
+          "factKey": "independent-fact-5",
+          "validation": "validated",
+          "quality": 1
+        },
+        {
+          "id": "enwiki:900003:q:4997293abca734856f05",
+          "pageId": 900003,
+          "sourceUrl": "https://en.wikipedia.org/wiki/Fixture_Observatory_900003",
+          "revisionId": 1,
+          "text": "Which river borders the fictional research grounds?",
+          "options": [
+            "Tarn",
+            "Alternative 6 A",
+            "Alternative 6 B",
+            "Alternative 6 C"
+          ],
+          "correctIndex": 0,
+          "explanation": "The research grounds border the Tarn river.",
+          "evidence": "The research grounds border the Tarn river.",
+          "factKey": "independent-fact-6",
+          "validation": "validated",
+          "quality": 1
+        },
+        {
+          "id": "enwiki:900003:q:4a9f1a45479cd83dd9d0",
+          "pageId": 900003,
+          "sourceUrl": "https://en.wikipedia.org/wiki/Fixture_Observatory_900003",
+          "revisionId": 1,
+          "text": "What fruit grows in the fictional courtyard orchard?",
+          "options": [
+            "Pear",
+            "Alternative 7 A",
+            "Alternative 7 B",
+            "Alternative 7 C"
+          ],
+          "correctIndex": 0,
+          "explanation": "The courtyard orchard grows the Pear fruit.",
+          "evidence": "The courtyard orchard grows the Pear fruit.",
+          "factKey": "independent-fact-7",
+          "validation": "validated",
+          "quality": 1
+        },
+        {
+          "id": "enwiki:900003:q:5123206de92dff87b682",
+          "pageId": 900003,
+          "sourceUrl": "https://en.wikipedia.org/wiki/Fixture_Observatory_900003",
+          "revisionId": 1,
+          "text": "Which language names the fictional lecture hall?",
+          "options": [
+            "Latin",
+            "Alternative 8 A",
+            "Alternative 8 B",
+            "Alternative 8 C"
+          ],
+          "correctIndex": 0,
+          "explanation": "The lecture hall has a name in Latin.",
+          "evidence": "The lecture hall has a name in Latin.",
+          "factKey": "independent-fact-8",
+          "validation": "validated",
+          "quality": 1
+        },
+        {
+          "id": "enwiki:900003:q:defd6166a6b28a218934",
+          "pageId": 900003,
+          "sourceUrl": "https://en.wikipedia.org/wiki/Fixture_Observatory_900003",
+          "revisionId": 1,
+          "text": "What rock forms the fictional monument base?",
+          "options": [
+            "Granite",
+            "Alternative 9 A",
+            "Alternative 9 B",
+            "Alternative 9 C"
+          ],
+          "correctIndex": 0,
+          "explanation": "The monument base consists of Granite.",
+          "evidence": "The monument base consists of Granite.",
+          "factKey": "independent-fact-9",
+          "validation": "validated",
+          "quality": 1
+        },
+        {
+          "id": "enwiki:900003:q:70970b6d65fb4bbc6b1e",
+          "pageId": 900003,
+          "sourceUrl": "https://en.wikipedia.org/wiki/Fixture_Observatory_900003",
+          "revisionId": 1,
+          "text": "Which musician composed the fictional academy anthem?",
+          "options": [
+            "Orin",
+            "Alternative 10 A",
+            "Alternative 10 B",
+            "Alternative 10 C"
+          ],
+          "correctIndex": 0,
+          "explanation": "The academy anthem was composed by Orin.",
+          "evidence": "The academy anthem was composed by Orin.",
+          "factKey": "independent-fact-10",
+          "validation": "validated",
+          "quality": 1
+        },
+        {
+          "id": "enwiki:900003:q:1fa3000b8058351c086a",
+          "pageId": 900003,
+          "sourceUrl": "https://en.wikipedia.org/wiki/Fixture_Observatory_900003",
+          "revisionId": 1,
+          "text": "What shape is the fictional library reading room?",
+          "options": [
+            "Hexagon",
+            "Alternative 11 A",
+            "Alternative 11 B",
+            "Alternative 11 C"
+          ],
+          "correctIndex": 0,
+          "explanation": "The library reading room is shaped as a Hexagon.",
+          "evidence": "The library reading room is shaped as a Hexagon.",
+          "factKey": "independent-fact-11",
+          "validation": "validated",
+          "quality": 1
+        }
+      ]
+    },
+    {
+      "card": {
+        "id": "enwiki:900004",
+        "versionId": "fixture:900004:epic:A",
+        "pageId": 900004,
+        "sourceKey": "900004:1",
+        "name": "Fixture Observatory 900004",
+        "type": "science",
+        "rarity": "epic",
+        "hp": 96,
+        "defense": 5,
+        "attacks": [
+          {
+            "id": "fixture:900004:epic:attack:0",
+            "name": "Observatory lens 1",
+            "description": "Fictional lens attack for development fixtures.",
+            "type": "science",
+            "power": 29,
+            "effectId": "pierce",
+            "effectParameters": {}
+          },
+          {
+            "id": "fixture:900004:epic:attack:1",
+            "name": "Observatory lens 2",
+            "description": "Fictional lens attack for development fixtures.",
+            "type": "science",
+            "power": 29,
+            "effectId": "weaken",
+            "effectParameters": {
+              "multiplier": 0.8
+            }
+          }
+        ],
+        "passive": {
+          "id": "stalwart"
+        },
+        "rarityAssignment": {
+          "rarity": "epic",
+          "score": 100,
+          "percentile": 0.5,
+          "version": "fixture-only",
+          "populationId": "fixture-only"
+        },
+        "generationVersion": "generator-1",
+        "balanceVersion": "balance-1",
+        "status": "fixture",
+        "questionIds": [
+          "enwiki:900004:q:361576cb8487e7a7a64b",
+          "enwiki:900004:q:006158bf4ed9617c5034",
+          "enwiki:900004:q:bd7ed7d2821370b0a058",
+          "enwiki:900004:q:179f660a35248ec407c2",
+          "enwiki:900004:q:e995c8eb7d1bf0cbac9d",
+          "enwiki:900004:q:9ee6aa6d7055edc0d9db",
+          "enwiki:900004:q:4997293abca734856f05",
+          "enwiki:900004:q:4a9f1a45479cd83dd9d0",
+          "enwiki:900004:q:5123206de92dff87b682",
+          "enwiki:900004:q:defd6166a6b28a218934",
+          "enwiki:900004:q:70970b6d65fb4bbc6b1e",
+          "enwiki:900004:q:1fa3000b8058351c086a"
+        ],
+        "createdAt": "2026-10-01T00:00:00.000Z"
+      },
+      "wikipedia": {
+        "pageId": 900004,
+        "title": "Fixture Observatory 900004",
+        "url": "https://en.wikipedia.org/wiki/Fixture_Observatory_900004",
+        "revisionId": 1,
+        "wikidataId": null,
+        "summary": "A fictional scientific observatory used only for deterministic tests.",
+        "text": "The observatory dome is built from Copper.\n\nThe west entrance was designed by Mira.\n\nThe archive opens each year in April.\n\nThe institute emblem depicts an Otter.\n\nThe north tower houses a Telescope.\n\nThe laboratory floor has an Amber color.\n\nThe research grounds border the Tarn river.\n\nThe courtyard orchard grows the Pear fruit.\n\nThe lecture hall has a name in Latin.\n\nThe monument base consists of Granite.\n\nThe academy anthem was composed by Orin.\n\nThe library reading room is shaped as a Hexagon.",
+        "wordCount": 600,
+        "categories": [
+          "Science"
+        ],
+        "fetchedAt": "2026-10-01T00:00:00.000Z",
+        "image": null,
+        "textLicense": "Synthetic test data, not Wikipedia content",
+        "discovery": "curated"
+      },
+      "trivia": [
+        {
+          "id": "enwiki:900004:q:361576cb8487e7a7a64b",
+          "pageId": 900004,
+          "sourceUrl": "https://en.wikipedia.org/wiki/Fixture_Observatory_900004",
+          "revisionId": 1,
+          "text": "What material forms the fictional observatory dome?",
+          "options": [
+            "Copper",
+            "Alternative 0 A",
+            "Alternative 0 B",
+            "Alternative 0 C"
+          ],
+          "correctIndex": 0,
+          "explanation": "The observatory dome is built from Copper.",
+          "evidence": "The observatory dome is built from Copper.",
+          "factKey": "independent-fact-0",
+          "validation": "validated",
+          "quality": 1
+        },
+        {
+          "id": "enwiki:900004:q:006158bf4ed9617c5034",
+          "pageId": 900004,
+          "sourceUrl": "https://en.wikipedia.org/wiki/Fixture_Observatory_900004",
+          "revisionId": 1,
+          "text": "Which fictional architect designed the west entrance?",
+          "options": [
+            "Mira",
+            "Alternative 1 A",
+            "Alternative 1 B",
+            "Alternative 1 C"
+          ],
+          "correctIndex": 0,
+          "explanation": "The west entrance was designed by Mira.",
+          "evidence": "The west entrance was designed by Mira.",
+          "factKey": "independent-fact-1",
+          "validation": "validated",
+          "quality": 1
+        },
+        {
+          "id": "enwiki:900004:q:bd7ed7d2821370b0a058",
+          "pageId": 900004,
+          "sourceUrl": "https://en.wikipedia.org/wiki/Fixture_Observatory_900004",
+          "revisionId": 1,
+          "text": "In what month does the fictional archive open?",
+          "options": [
+            "April",
+            "Alternative 2 A",
+            "Alternative 2 B",
+            "Alternative 2 C"
+          ],
+          "correctIndex": 0,
+          "explanation": "The archive opens each year in April.",
+          "evidence": "The archive opens each year in April.",
+          "factKey": "independent-fact-2",
+          "validation": "validated",
+          "quality": 1
+        },
+        {
+          "id": "enwiki:900004:q:179f660a35248ec407c2",
+          "pageId": 900004,
+          "sourceUrl": "https://en.wikipedia.org/wiki/Fixture_Observatory_900004",
+          "revisionId": 1,
+          "text": "What animal appears on the fictional institute emblem?",
+          "options": [
+            "Otter",
+            "Alternative 3 A",
+            "Alternative 3 B",
+            "Alternative 3 C"
+          ],
+          "correctIndex": 0,
+          "explanation": "The institute emblem depicts an Otter.",
+          "evidence": "The institute emblem depicts an Otter.",
+          "factKey": "independent-fact-3",
+          "validation": "validated",
+          "quality": 1
+        },
+        {
+          "id": "enwiki:900004:q:e995c8eb7d1bf0cbac9d",
+          "pageId": 900004,
+          "sourceUrl": "https://en.wikipedia.org/wiki/Fixture_Observatory_900004",
+          "revisionId": 1,
+          "text": "Which instrument is housed in the fictional north tower?",
+          "options": [
+            "Telescope",
+            "Alternative 4 A",
+            "Alternative 4 B",
+            "Alternative 4 C"
+          ],
+          "correctIndex": 0,
+          "explanation": "The north tower houses a Telescope.",
+          "evidence": "The north tower houses a Telescope.",
+          "factKey": "independent-fact-4",
+          "validation": "validated",
+          "quality": 1
+        },
+        {
+          "id": "enwiki:900004:q:9ee6aa6d7055edc0d9db",
+          "pageId": 900004,
+          "sourceUrl": "https://en.wikipedia.org/wiki/Fixture_Observatory_900004",
+          "revisionId": 1,
+          "text": "What color is the fictional laboratory floor?",
+          "options": [
+            "Amber",
+            "Alternative 5 A",
+            "Alternative 5 B",
+            "Alternative 5 C"
+          ],
+          "correctIndex": 0,
+          "explanation": "The laboratory floor has an Amber color.",
+          "evidence": "The laboratory floor has an Amber color.",
+          "factKey": "independent-fact-5",
+          "validation": "validated",
+          "quality": 1
+        },
+        {
+          "id": "enwiki:900004:q:4997293abca734856f05",
+          "pageId": 900004,
+          "sourceUrl": "https://en.wikipedia.org/wiki/Fixture_Observatory_900004",
+          "revisionId": 1,
+          "text": "Which river borders the fictional research grounds?",
+          "options": [
+            "Tarn",
+            "Alternative 6 A",
+            "Alternative 6 B",
+            "Alternative 6 C"
+          ],
+          "correctIndex": 0,
+          "explanation": "The research grounds border the Tarn river.",
+          "evidence": "The research grounds border the Tarn river.",
+          "factKey": "independent-fact-6",
+          "validation": "validated",
+          "quality": 1
+        },
+        {
+          "id": "enwiki:900004:q:4a9f1a45479cd83dd9d0",
+          "pageId": 900004,
+          "sourceUrl": "https://en.wikipedia.org/wiki/Fixture_Observatory_900004",
+          "revisionId": 1,
+          "text": "What fruit grows in the fictional courtyard orchard?",
+          "options": [
+            "Pear",
+            "Alternative 7 A",
+            "Alternative 7 B",
+            "Alternative 7 C"
+          ],
+          "correctIndex": 0,
+          "explanation": "The courtyard orchard grows the Pear fruit.",
+          "evidence": "The courtyard orchard grows the Pear fruit.",
+          "factKey": "independent-fact-7",
+          "validation": "validated",
+          "quality": 1
+        },
+        {
+          "id": "enwiki:900004:q:5123206de92dff87b682",
+          "pageId": 900004,
+          "sourceUrl": "https://en.wikipedia.org/wiki/Fixture_Observatory_900004",
+          "revisionId": 1,
+          "text": "Which language names the fictional lecture hall?",
+          "options": [
+            "Latin",
+            "Alternative 8 A",
+            "Alternative 8 B",
+            "Alternative 8 C"
+          ],
+          "correctIndex": 0,
+          "explanation": "The lecture hall has a name in Latin.",
+          "evidence": "The lecture hall has a name in Latin.",
+          "factKey": "independent-fact-8",
+          "validation": "validated",
+          "quality": 1
+        },
+        {
+          "id": "enwiki:900004:q:defd6166a6b28a218934",
+          "pageId": 900004,
+          "sourceUrl": "https://en.wikipedia.org/wiki/Fixture_Observatory_900004",
+          "revisionId": 1,
+          "text": "What rock forms the fictional monument base?",
+          "options": [
+            "Granite",
+            "Alternative 9 A",
+            "Alternative 9 B",
+            "Alternative 9 C"
+          ],
+          "correctIndex": 0,
+          "explanation": "The monument base consists of Granite.",
+          "evidence": "The monument base consists of Granite.",
+          "factKey": "independent-fact-9",
+          "validation": "validated",
+          "quality": 1
+        },
+        {
+          "id": "enwiki:900004:q:70970b6d65fb4bbc6b1e",
+          "pageId": 900004,
+          "sourceUrl": "https://en.wikipedia.org/wiki/Fixture_Observatory_900004",
+          "revisionId": 1,
+          "text": "Which musician composed the fictional academy anthem?",
+          "options": [
+            "Orin",
+            "Alternative 10 A",
+            "Alternative 10 B",
+            "Alternative 10 C"
+          ],
+          "correctIndex": 0,
+          "explanation": "The academy anthem was composed by Orin.",
+          "evidence": "The academy anthem was composed by Orin.",
+          "factKey": "independent-fact-10",
+          "validation": "validated",
+          "quality": 1
+        },
+        {
+          "id": "enwiki:900004:q:1fa3000b8058351c086a",
+          "pageId": 900004,
+          "sourceUrl": "https://en.wikipedia.org/wiki/Fixture_Observatory_900004",
+          "revisionId": 1,
+          "text": "What shape is the fictional library reading room?",
+          "options": [
+            "Hexagon",
+            "Alternative 11 A",
+            "Alternative 11 B",
+            "Alternative 11 C"
+          ],
+          "correctIndex": 0,
+          "explanation": "The library reading room is shaped as a Hexagon.",
+          "evidence": "The library reading room is shaped as a Hexagon.",
+          "factKey": "independent-fact-11",
+          "validation": "validated",
+          "quality": 1
+        }
+      ]
+    },
+    {
+      "card": {
+        "id": "enwiki:900005",
+        "versionId": "fixture:900005:legendary:A",
+        "pageId": 900005,
+        "sourceKey": "900005:1",
+        "name": "Fixture Observatory 900005",
+        "type": "science",
+        "rarity": "legendary",
+        "hp": 97,
+        "defense": 8,
+        "attacks": [
+          {
+            "id": "fixture:900005:legendary:attack:0",
+            "name": "Observatory lens 1",
+            "description": "Fictional lens attack for development fixtures.",
+            "type": "science",
+            "power": 32,
+            "effectId": "pierce",
+            "effectParameters": {}
+          },
+          {
+            "id": "fixture:900005:legendary:attack:1",
+            "name": "Observatory lens 2",
+            "description": "Fictional lens attack for development fixtures.",
+            "type": "science",
+            "power": 32,
+            "effectId": "weaken",
+            "effectParameters": {
+              "multiplier": 0.8
+            }
+          },
+          {
+            "id": "fixture:900005:legendary:attack:2",
+            "name": "Observatory lens 3",
+            "description": "Fictional lens attack for development fixtures.",
+            "type": "science",
+            "power": 38,
+            "effectId": null,
+            "effectParameters": null
+          }
+        ],
+        "passive": {
+          "id": "stalwart"
+        },
+        "rarityAssignment": {
+          "rarity": "legendary",
+          "score": 100,
+          "percentile": 0.5,
+          "version": "fixture-only",
+          "populationId": "fixture-only"
+        },
+        "generationVersion": "generator-1",
+        "balanceVersion": "balance-1",
+        "status": "fixture",
+        "questionIds": [
+          "enwiki:900005:q:361576cb8487e7a7a64b",
+          "enwiki:900005:q:006158bf4ed9617c5034",
+          "enwiki:900005:q:bd7ed7d2821370b0a058",
+          "enwiki:900005:q:179f660a35248ec407c2",
+          "enwiki:900005:q:e995c8eb7d1bf0cbac9d",
+          "enwiki:900005:q:9ee6aa6d7055edc0d9db",
+          "enwiki:900005:q:4997293abca734856f05",
+          "enwiki:900005:q:4a9f1a45479cd83dd9d0",
+          "enwiki:900005:q:5123206de92dff87b682",
+          "enwiki:900005:q:defd6166a6b28a218934",
+          "enwiki:900005:q:70970b6d65fb4bbc6b1e",
+          "enwiki:900005:q:1fa3000b8058351c086a"
+        ],
+        "createdAt": "2026-10-01T00:00:00.000Z"
+      },
+      "wikipedia": {
+        "pageId": 900005,
+        "title": "Fixture Observatory 900005",
+        "url": "https://en.wikipedia.org/wiki/Fixture_Observatory_900005",
+        "revisionId": 1,
+        "wikidataId": null,
+        "summary": "A fictional scientific observatory used only for deterministic tests.",
+        "text": "The observatory dome is built from Copper.\n\nThe west entrance was designed by Mira.\n\nThe archive opens each year in April.\n\nThe institute emblem depicts an Otter.\n\nThe north tower houses a Telescope.\n\nThe laboratory floor has an Amber color.\n\nThe research grounds border the Tarn river.\n\nThe courtyard orchard grows the Pear fruit.\n\nThe lecture hall has a name in Latin.\n\nThe monument base consists of Granite.\n\nThe academy anthem was composed by Orin.\n\nThe library reading room is shaped as a Hexagon.",
+        "wordCount": 600,
+        "categories": [
+          "Science"
+        ],
+        "fetchedAt": "2026-10-01T00:00:00.000Z",
+        "image": null,
+        "textLicense": "Synthetic test data, not Wikipedia content",
+        "discovery": "random"
+      },
+      "trivia": [
+        {
+          "id": "enwiki:900005:q:361576cb8487e7a7a64b",
+          "pageId": 900005,
+          "sourceUrl": "https://en.wikipedia.org/wiki/Fixture_Observatory_900005",
+          "revisionId": 1,
+          "text": "What material forms the fictional observatory dome?",
+          "options": [
+            "Copper",
+            "Alternative 0 A",
+            "Alternative 0 B",
+            "Alternative 0 C"
+          ],
+          "correctIndex": 0,
+          "explanation": "The observatory dome is built from Copper.",
+          "evidence": "The observatory dome is built from Copper.",
+          "factKey": "independent-fact-0",
+          "validation": "validated",
+          "quality": 1
+        },
+        {
+          "id": "enwiki:900005:q:006158bf4ed9617c5034",
+          "pageId": 900005,
+          "sourceUrl": "https://en.wikipedia.org/wiki/Fixture_Observatory_900005",
+          "revisionId": 1,
+          "text": "Which fictional architect designed the west entrance?",
+          "options": [
+            "Mira",
+            "Alternative 1 A",
+            "Alternative 1 B",
+            "Alternative 1 C"
+          ],
+          "correctIndex": 0,
+          "explanation": "The west entrance was designed by Mira.",
+          "evidence": "The west entrance was designed by Mira.",
+          "factKey": "independent-fact-1",
+          "validation": "validated",
+          "quality": 1
+        },
+        {
+          "id": "enwiki:900005:q:bd7ed7d2821370b0a058",
+          "pageId": 900005,
+          "sourceUrl": "https://en.wikipedia.org/wiki/Fixture_Observatory_900005",
+          "revisionId": 1,
+          "text": "In what month does the fictional archive open?",
+          "options": [
+            "April",
+            "Alternative 2 A",
+            "Alternative 2 B",
+            "Alternative 2 C"
+          ],
+          "correctIndex": 0,
+          "explanation": "The archive opens each year in April.",
+          "evidence": "The archive opens each year in April.",
+          "factKey": "independent-fact-2",
+          "validation": "validated",
+          "quality": 1
+        },
+        {
+          "id": "enwiki:900005:q:179f660a35248ec407c2",
+          "pageId": 900005,
+          "sourceUrl": "https://en.wikipedia.org/wiki/Fixture_Observatory_900005",
+          "revisionId": 1,
+          "text": "What animal appears on the fictional institute emblem?",
+          "options": [
+            "Otter",
+            "Alternative 3 A",
+            "Alternative 3 B",
+            "Alternative 3 C"
+          ],
+          "correctIndex": 0,
+          "explanation": "The institute emblem depicts an Otter.",
+          "evidence": "The institute emblem depicts an Otter.",
+          "factKey": "independent-fact-3",
+          "validation": "validated",
+          "quality": 1
+        },
+        {
+          "id": "enwiki:900005:q:e995c8eb7d1bf0cbac9d",
+          "pageId": 900005,
+          "sourceUrl": "https://en.wikipedia.org/wiki/Fixture_Observatory_900005",
+          "revisionId": 1,
+          "text": "Which instrument is housed in the fictional north tower?",
+          "options": [
+            "Telescope",
+            "Alternative 4 A",
+            "Alternative 4 B",
+            "Alternative 4 C"
+          ],
+          "correctIndex": 0,
+          "explanation": "The north tower houses a Telescope.",
+          "evidence": "The north tower houses a Telescope.",
+          "factKey": "independent-fact-4",
+          "validation": "validated",
+          "quality": 1
+        },
+        {
+          "id": "enwiki:900005:q:9ee6aa6d7055edc0d9db",
+          "pageId": 900005,
+          "sourceUrl": "https://en.wikipedia.org/wiki/Fixture_Observatory_900005",
+          "revisionId": 1,
+          "text": "What color is the fictional laboratory floor?",
+          "options": [
+            "Amber",
+            "Alternative 5 A",
+            "Alternative 5 B",
+            "Alternative 5 C"
+          ],
+          "correctIndex": 0,
+          "explanation": "The laboratory floor has an Amber color.",
+          "evidence": "The laboratory floor has an Amber color.",
+          "factKey": "independent-fact-5",
+          "validation": "validated",
+          "quality": 1
+        },
+        {
+          "id": "enwiki:900005:q:4997293abca734856f05",
+          "pageId": 900005,
+          "sourceUrl": "https://en.wikipedia.org/wiki/Fixture_Observatory_900005",
+          "revisionId": 1,
+          "text": "Which river borders the fictional research grounds?",
+          "options": [
+            "Tarn",
+            "Alternative 6 A",
+            "Alternative 6 B",
+            "Alternative 6 C"
+          ],
+          "correctIndex": 0,
+          "explanation": "The research grounds border the Tarn river.",
+          "evidence": "The research grounds border the Tarn river.",
+          "factKey": "independent-fact-6",
+          "validation": "validated",
+          "quality": 1
+        },
+        {
+          "id": "enwiki:900005:q:4a9f1a45479cd83dd9d0",
+          "pageId": 900005,
+          "sourceUrl": "https://en.wikipedia.org/wiki/Fixture_Observatory_900005",
+          "revisionId": 1,
+          "text": "What fruit grows in the fictional courtyard orchard?",
+          "options": [
+            "Pear",
+            "Alternative 7 A",
+            "Alternative 7 B",
+            "Alternative 7 C"
+          ],
+          "correctIndex": 0,
+          "explanation": "The courtyard orchard grows the Pear fruit.",
+          "evidence": "The courtyard orchard grows the Pear fruit.",
+          "factKey": "independent-fact-7",
+          "validation": "validated",
+          "quality": 1
+        },
+        {
+          "id": "enwiki:900005:q:5123206de92dff87b682",
+          "pageId": 900005,
+          "sourceUrl": "https://en.wikipedia.org/wiki/Fixture_Observatory_900005",
+          "revisionId": 1,
+          "text": "Which language names the fictional lecture hall?",
+          "options": [
+            "Latin",
+            "Alternative 8 A",
+            "Alternative 8 B",
+            "Alternative 8 C"
+          ],
+          "correctIndex": 0,
+          "explanation": "The lecture hall has a name in Latin.",
+          "evidence": "The lecture hall has a name in Latin.",
+          "factKey": "independent-fact-8",
+          "validation": "validated",
+          "quality": 1
+        },
+        {
+          "id": "enwiki:900005:q:defd6166a6b28a218934",
+          "pageId": 900005,
+          "sourceUrl": "https://en.wikipedia.org/wiki/Fixture_Observatory_900005",
+          "revisionId": 1,
+          "text": "What rock forms the fictional monument base?",
+          "options": [
+            "Granite",
+            "Alternative 9 A",
+            "Alternative 9 B",
+            "Alternative 9 C"
+          ],
+          "correctIndex": 0,
+          "explanation": "The monument base consists of Granite.",
+          "evidence": "The monument base consists of Granite.",
+          "factKey": "independent-fact-9",
+          "validation": "validated",
+          "quality": 1
+        },
+        {
+          "id": "enwiki:900005:q:70970b6d65fb4bbc6b1e",
+          "pageId": 900005,
+          "sourceUrl": "https://en.wikipedia.org/wiki/Fixture_Observatory_900005",
+          "revisionId": 1,
+          "text": "Which musician composed the fictional academy anthem?",
+          "options": [
+            "Orin",
+            "Alternative 10 A",
+            "Alternative 10 B",
+            "Alternative 10 C"
+          ],
+          "correctIndex": 0,
+          "explanation": "The academy anthem was composed by Orin.",
+          "evidence": "The academy anthem was composed by Orin.",
+          "factKey": "independent-fact-10",
+          "validation": "validated",
+          "quality": 1
+        },
+        {
+          "id": "enwiki:900005:q:1fa3000b8058351c086a",
+          "pageId": 900005,
+          "sourceUrl": "https://en.wikipedia.org/wiki/Fixture_Observatory_900005",
+          "revisionId": 1,
+          "text": "What shape is the fictional library reading room?",
+          "options": [
+            "Hexagon",
+            "Alternative 11 A",
+            "Alternative 11 B",
+            "Alternative 11 C"
+          ],
+          "correctIndex": 0,
+          "explanation": "The library reading room is shaped as a Hexagon.",
+          "evidence": "The library reading room is shaped as a Hexagon.",
+          "factKey": "independent-fact-11",
+          "validation": "validated",
+          "quality": 1
+        }
+      ]
+    }
+  ]
+}

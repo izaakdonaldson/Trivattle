@@ -1,0 +1,5 @@
+node_modules
+dist
+data/catalogue
+data/fixtures/cards.json
+package-lock.json
