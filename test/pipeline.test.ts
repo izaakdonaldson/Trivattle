@@ -419,3 +419,73 @@ test('batch progress identifies the current article before work and counts publi
     x.cleanup();
   }
 });
+
+test('concurrent workers respect the limit and count out-of-order completions', async (t) => {
+  const x = setup();
+  try {
+    const first = await x.pipeline.ingest('Observatory', 'curated');
+    const jobs = [0, 1, 2].map((i) => ({
+      ...structuredClone(first),
+      id: `job-${i}`,
+      title: `Card ${i}`,
+    }));
+    const messages: string[] = [];
+    const pipeline = new Pipeline(x.store, x.wiki, x.text, new RulesDecisions(), x.config, {
+      concurrency: 2,
+      onProgress: (message) => messages.push(message),
+    });
+    const releases = new Map<string, () => void>();
+    let active = 0,
+      maximum = 0;
+    let thirdStarted!: () => void;
+    const third = new Promise<void>((resolve) => {
+      thirdStarted = resolve;
+    });
+    t.mock.method(pipeline, 'generate', async (job: typeof first) => {
+      active++;
+      maximum = Math.max(maximum, active);
+      await new Promise<void>((resolve) => {
+        releases.set(job.id, resolve);
+        if (job.id === 'job-2') thirdStarted();
+      });
+      active--;
+      job.status = job.id === 'job-1' ? 'failed' : 'published';
+    });
+    const work = pipeline.generateBatch(jobs);
+    assert.equal(active, 2);
+    assert.equal(releases.has('job-2'), false);
+    releases.get('job-1')!();
+    await third;
+    assert(messages.some((m) => /Card 1: failed.*0\/3 cards published; 1\/3 processed/.test(m)));
+    releases.get('job-2')!();
+    releases.get('job-0')!();
+    await work;
+    assert.equal(maximum, 2);
+    assert.equal(releases.size, 3);
+    assert.match(messages.at(-1)!, /2\/3 cards published; 3\/3 processed/);
+  } finally {
+    x.cleanup();
+  }
+});
+
+test('concurrent retry generation persists both cards in one catalogue', async () => {
+  const x = setup();
+  try {
+    await x.store.withWriter(async () => {
+      await x.pipeline.ingest('Observatory', 'curated');
+      await x.pipeline.ingest('Other', 'random');
+      x.pipeline.rank();
+      const pipeline = new Pipeline(x.store, x.wiki, x.text, new RulesDecisions(), x.config, {
+        concurrency: 2,
+        skipLeakageReview: true,
+      });
+      await pipeline.retryFailed();
+      assert.equal(Object.keys(x.store.data.published).length, 2);
+      assert.deepEqual(pipeline.validateAll(), []);
+    });
+    const reloaded = new CatalogueStore(x.directory, true);
+    assert.equal(Object.keys(reloaded.data.published).length, 2);
+  } finally {
+    x.cleanup();
+  }
+});

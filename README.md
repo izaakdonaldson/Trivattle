@@ -229,6 +229,12 @@ npm run cards -- --popular-only 100 --batch 40 --verbose
 npm run cards -- --retry-failed --verbose
 ```
 
+To generate up to four cards concurrently, including retries:
+
+```sh
+npm run cards -- --retry-failed --concurrency 4 --skip-leakage-review --verbose
+```
+
 For a hackathon demo, add `--skip-leakage-review` to skip AI cross-question leakage review, including for previously saved jobs:
 
 ```sh
@@ -240,7 +246,7 @@ Accuracy review, evidence matching, schema validation, duplicate detection and q
 
 Generation and retry runs print `Working on <article> [1/40]` before each card, then its result and separate published/processed counts. The denominator is the number of jobs being attempted, so failures do not count as cards made.
 
-`--verbose` reports AI request stages, thinking mode, elapsed seconds, output-token counts and schema retries without logging credentials or article content. A thinking-mode change can affect model judgments; audits remain mandatory, but no fixed latency or identical model quality is guaranteed. Card jobs remain sequential to keep catalogue writes and publication predictable. See [DeepSeek thinking mode](https://api-docs.deepseek.com/guides/thinking_mode/) for the API controls.
+`--verbose` reports AI request stages, thinking mode, elapsed seconds, output-token counts and schema retries without logging credentials or article content. A thinking-mode change can affect model judgments; audits remain mandatory, but no fixed latency or identical model quality is guaranteed. Card generation supports `--concurrency 1–16` (default 1), including `--retry-failed`. Use `--concurrency 4` to work on four cards at once. AI logs include article names, and published/processed counts track actual completions even when cards finish out of order. Ingestion and ranking stay sequential; one process retains the catalogue writer lock and saves synchronously. With leakage review enabled, each card can have two overlapping audit calls. Existing HTTP spacing and retries still apply. See [DeepSeek thinking mode](https://api-docs.deepseek.com/guides/thinking_mode/) for the API controls.
 
 ## Tests, fixtures and balance
 

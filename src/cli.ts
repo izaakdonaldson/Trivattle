@@ -24,6 +24,7 @@ const program = new Command()
   )
   .option('--titles-file <path>', 'curated title list, one title per line')
   .option('--batch <count>', 'maximum eligible jobs to generate', Number, 50)
+  .option('--concurrency <count>', 'cards to generate concurrently (1–16)', Number, 1)
   .option('--retry-failed', 'resume incomplete jobs')
   .option('--skip-leakage-review', 'skip AI cross-question leakage review for this run (demo mode)')
   .option(
@@ -55,6 +56,8 @@ const program = new Command()
 program.parse();
 const opts = program.opts();
 async function main() {
+  if (!Number.isInteger(opts.concurrency) || opts.concurrency < 1 || opts.concurrency > 16)
+    throw Error('--concurrency must be an integer from 1 to 16');
   if (opts.skipLeakageReview && opts.revalidateTrivia)
     throw Error('--skip-leakage-review cannot be combined with --revalidate-trivia');
   for (const key of ['random', 'popular', 'popularOnly', 'batch'])
@@ -152,6 +155,7 @@ async function main() {
   const decisions = process.env.JEV_API_KEY ? new JevDecisions(http) : new RulesDecisions();
   const pipeline = new Pipeline(store, wiki, provider, decisions, cfg, {
     skipLeakageReview: !!opts.skipLeakageReview,
+    concurrency: opts.concurrency,
     onProgress: (message) => console.log(message),
   });
   if (opts.skipLeakageReview)

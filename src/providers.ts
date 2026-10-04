@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { HttpClient } from './http.js';
+import { cardContext } from './progress.js';
 import {
   types,
   effectIds,
@@ -39,6 +40,10 @@ export class DeepSeek implements TextProvider {
     this.thinking = thinking as typeof this.thinking;
     this.id = `deepseek:${model}:thinking-${thinking}`;
   }
+  private logMessage(message: string) {
+    const title = cardContext.getStore();
+    this.log?.(title ? `[${title}] ${message}` : message);
+  }
   async json<T>(task: string, input: unknown, schema: z.ZodType<T>): Promise<T> {
     if (!this.key)
       throw Error(
@@ -54,7 +59,7 @@ export class DeepSeek implements TextProvider {
           : task.startsWith('Review the ENTIRE')
             ? 'leakage review'
             : 'card metadata';
-      this.log?.(
+      this.logMessage(
         `[AI] ${stage}: request ${i + 1}/${this.config.model.schemaAttempts}, thinking=${this.thinking}`,
       );
       const result = await this.http.json(this.base.replace(/\/$/, '') + '/chat/completions', {
@@ -82,14 +87,14 @@ export class DeepSeek implements TextProvider {
           ],
         }),
       });
-      this.log?.(
+      this.logMessage(
         `[AI] ${stage}: ${((Date.now() - started) / 1000).toFixed(1)}s, finish=${result.choices?.[0]?.finish_reason ?? 'missing'}, output tokens=${result.usage?.completion_tokens ?? 'unknown'}`,
       );
       try {
         if (result.choices?.[0]?.finish_reason !== 'stop') throw Error('Incomplete model response');
         return schema.parse(JSON.parse(result.choices[0].message.content));
       } catch {
-        this.log?.(`[AI] ${stage}: invalid or truncated response; schema retry needed`);
+        this.logMessage(`[AI] ${stage}: invalid or truncated response; schema retry needed`);
         error =
           'Prior response was incomplete or failed the JSON schema. Produce a complete valid JSON object.';
       }

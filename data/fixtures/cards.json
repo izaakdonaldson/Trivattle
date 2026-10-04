@@ -10,15 +10,15 @@
         "name": "Fixture Observatory 900001",
         "type": "science",
         "rarity": "common",
-        "hp": 102,
-        "defense": 6,
+        "hp": 95,
+        "defense": 8,
         "attacks": [
           {
             "id": "fixture:900001:common:attack:0",
             "name": "Observatory lens 1",
             "description": "Fictional lens attack for development fixtures.",
             "type": "science",
-            "power": 36,
+            "power": 30,
             "effectId": null,
             "effectParameters": null
           }
@@ -307,15 +307,15 @@
         "name": "Fixture Observatory 900002",
         "type": "science",
         "rarity": "uncommon",
-        "hp": 99,
-        "defense": 5,
+        "hp": 98,
+        "defense": 4,
         "attacks": [
           {
             "id": "fixture:900002:uncommon:attack:0",
             "name": "Observatory lens 1",
             "description": "Fictional lens attack for development fixtures.",
             "type": "science",
-            "power": 40,
+            "power": 38,
             "effectId": null,
             "effectParameters": null
           },
@@ -324,7 +324,7 @@
             "name": "Observatory lens 2",
             "description": "Fictional lens attack for development fixtures.",
             "type": "science",
-            "power": 40,
+            "power": 38,
             "effectId": null,
             "effectParameters": null
           }
@@ -613,15 +613,15 @@
         "name": "Fixture Observatory 900003",
         "type": "science",
         "rarity": "rare",
-        "hp": 105,
-        "defense": 8,
+        "hp": 102,
+        "defense": 5,
         "attacks": [
           {
             "id": "fixture:900003:rare:attack:0",
             "name": "Observatory lens 1",
             "description": "Fictional lens attack for development fixtures.",
             "type": "science",
-            "power": 28,
+            "power": 27,
             "effectId": "pierce",
             "effectParameters": {}
           },
@@ -630,7 +630,7 @@
             "name": "Observatory lens 2",
             "description": "Fictional lens attack for development fixtures.",
             "type": "science",
-            "power": 40,
+            "power": 35,
             "effectId": null,
             "effectParameters": null
           }
@@ -921,15 +921,15 @@
         "name": "Fixture Observatory 900004",
         "type": "science",
         "rarity": "epic",
-        "hp": 96,
-        "defense": 5,
+        "hp": 103,
+        "defense": 6,
         "attacks": [
           {
             "id": "fixture:900004:epic:attack:0",
             "name": "Observatory lens 1",
             "description": "Fictional lens attack for development fixtures.",
             "type": "science",
-            "power": 29,
+            "power": 30,
             "effectId": "pierce",
             "effectParameters": {}
           },
@@ -938,7 +938,7 @@
             "name": "Observatory lens 2",
             "description": "Fictional lens attack for development fixtures.",
             "type": "science",
-            "power": 29,
+            "power": 30,
             "effectId": "weaken",
             "effectParameters": {
               "multiplier": 0.8
@@ -1231,15 +1231,15 @@
         "name": "Fixture Observatory 900005",
         "type": "science",
         "rarity": "legendary",
-        "hp": 97,
-        "defense": 8,
+        "hp": 105,
+        "defense": 6,
         "attacks": [
           {
             "id": "fixture:900005:legendary:attack:0",
             "name": "Observatory lens 1",
             "description": "Fictional lens attack for development fixtures.",
             "type": "science",
-            "power": 32,
+            "power": 27,
             "effectId": "pierce",
             "effectParameters": {}
           },
@@ -1248,7 +1248,7 @@
             "name": "Observatory lens 2",
             "description": "Fictional lens attack for development fixtures.",
             "type": "science",
-            "power": 32,
+            "power": 27,
             "effectId": "weaken",
             "effectParameters": {
               "multiplier": 0.8
@@ -1259,7 +1259,7 @@
             "name": "Observatory lens 3",
             "description": "Fictional lens attack for development fixtures.",
             "type": "science",
-            "power": 38,
+            "power": 37,
             "effectId": null,
             "effectParameters": null
           }

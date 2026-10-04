@@ -16,6 +16,7 @@ import {
 import { generateTrivia, validateBank, type TriviaOptions } from './trivia.js';
 import { rankPopulation } from './rarity.js';
 import type { Config } from './config.js';
+import { cardContext } from './progress.js';
 export class Pipeline {
   constructor(
     readonly store: CatalogueStore,
@@ -23,7 +24,10 @@ export class Pipeline {
     readonly text: TextProvider,
     readonly decisions: DecisionProvider,
     readonly config: Config,
-    readonly triviaOptions: TriviaOptions & { onProgress?: (message: string) => void } = {},
+    readonly triviaOptions: TriviaOptions & {
+      concurrency?: number;
+      onProgress?: (message: string) => void;
+    } = {},
   ) {}
   private save(job: Job) {
     job.updatedAt = new Date().toISOString();
@@ -310,15 +314,33 @@ export class Pipeline {
     }
   }
   async generateBatch(jobs: Job[]) {
-    let published = 0;
-    for (const [index, job] of jobs.entries()) {
-      this.triviaOptions.onProgress?.(`Working on ${job.title} [${index + 1}/${jobs.length}]`);
-      await this.generate(job);
-      if (job.status === 'published') published++;
-      this.triviaOptions.onProgress?.(
-        `${job.title}: ${job.status}/${job.stage} — ${published}/${jobs.length} cards published; ${index + 1}/${jobs.length} processed`,
-      );
-    }
+    const concurrency = this.triviaOptions.concurrency ?? 1;
+    if (!Number.isInteger(concurrency) || concurrency < 1 || concurrency > 16)
+      throw Error('Concurrency must be an integer from 1 to 16');
+    let next = 0,
+      published = 0,
+      processed = 0;
+    const worker = async () => {
+      while (next < jobs.length) {
+        // Claim synchronously before yielding; each worker owns a distinct job.
+        const index = next++;
+        const job = jobs[index]!;
+        this.triviaOptions.onProgress?.(`Working on ${job.title} [${index + 1}/${jobs.length}]`);
+        await cardContext.run(job.title, () => this.generate(job));
+        if (job.status === 'published') published++;
+        processed++;
+        this.triviaOptions.onProgress?.(
+          `${job.title}: ${job.status}/${job.stage} — ${published}/${jobs.length} cards published; ${processed}/${jobs.length} processed`,
+        );
+      }
+    };
+    // Even an unexpected save/logging failure must not release the catalogue lock
+    // while another worker is still using the shared in-memory store.
+    const results = await Promise.allSettled(
+      Array.from({ length: Math.min(concurrency, jobs.length) }, () => worker()),
+    );
+    const failed = results.find((result) => result.status === 'rejected');
+    if (failed?.status === 'rejected') throw failed.reason;
   }
   async retryFailed() {
     const jobs = Object.values(this.store.data.jobs).filter(

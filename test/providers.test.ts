@@ -232,3 +232,28 @@ test('HTTP reserves separate start slots for concurrent requests', async (t) => 
   ]);
   assert.deepEqual(waits, [0, 250, 500]);
 });
+
+test('interleaved AI logs keep the correct article context', async () => {
+  const { cardContext } = await import('../src/progress.js');
+  const logs: string[] = [];
+  const h = client(async () =>
+    response({ choices: [{ finish_reason: 'stop', message: { content: '{"ok":true}' } }] }),
+  );
+  const provider = new DeepSeek(
+    h,
+    cfg(),
+    'fake',
+    'deepseek-flash',
+    'https://api.deepseek.com',
+    'disabled',
+    (m) => logs.push(m),
+  );
+  await Promise.all(
+    ['Earth', 'Sun'].map((title) =>
+      cardContext.run(title, () => provider.json('test', {}, z.object({ ok: z.boolean() }))),
+    ),
+  );
+  for (const title of ['Earth', 'Sun']) {
+    assert.equal(logs.filter((m) => m.startsWith(`[${title}]`)).length, 2);
+  }
+});
