@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { CatalogueStore } from '../src/store.js';
 import { wikiImage } from '../src/wiki-images.js';
 import type { Source } from '../src/domain.js';
-const store = new CatalogueStore(process.env.CARD_DATA_DIR ?? 'data/catalogue');
+const store = new CatalogueStore(process.env.CARD_DATA_DIR || 'data/catalogue');
 const ids = [
   ...new Set(Object.values(store.data.published).map((id) => store.data.cards[id]!.pageId)),
 ];

@@ -85,7 +85,7 @@ export const configSchema = z
   .strict();
 export type Config = z.infer<typeof configSchema>;
 export function loadConfig(
-  path = process.env.CARD_CONFIG ?? new URL('../config/gameplay.json', import.meta.url),
+  path = process.env.CARD_CONFIG || new URL('../config/gameplay.json', import.meta.url),
 ) {
   return configSchema.parse(JSON.parse(readFileSync(path, 'utf8')));
 }
@@ -101,7 +101,7 @@ export const effectiveness = z
   .parse(
     JSON.parse(
       readFileSync(
-        process.env.TYPE_CONFIG ?? new URL('../config/effectiveness.json', import.meta.url),
+        process.env.TYPE_CONFIG || new URL('../config/effectiveness.json', import.meta.url),
         'utf8',
       ),
     ),

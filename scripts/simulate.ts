@@ -4,10 +4,10 @@ import { freshCombatant, resolveHit, endOwnTurn, type Combatant } from '../src/m
 import { types, rarities, seededInt, hash, type Card } from '../src/domain.js';
 import { card } from '../test/helpers.js';
 const cfg = loadConfig();
-const games = Number(process.env.SIM_GAMES ?? 2000),
-  correctProbability = Number(process.env.SIM_CORRECT_PROBABILITY ?? 0.6),
-  maxTurns = Number(process.env.SIM_MAX_TURNS ?? 200),
-  seed = process.env.SIM_SEED ?? 'balance-v1';
+const games = Number(process.env.SIM_GAMES || 2000),
+  correctProbability = Number(process.env.SIM_CORRECT_PROBABILITY || 0.6),
+  maxTurns = Number(process.env.SIM_MAX_TURNS || 200),
+  seed = process.env.SIM_SEED || 'balance-v1';
 if (
   !Number.isInteger(games) ||
   games < 1 ||

@@ -22,10 +22,10 @@ export function cardView(card: Card, data: Catalogue): CardView {
     summary: source.summary,
   });
 }
-export function playable(store: CatalogueStore, config: Config): Card[] {
+export function playable(store: Pick<CatalogueStore, 'data'>, config: Config): Card[] {
   return new CachedCatalogue(store, config).getCards().filter((c) => isPlayable(c, store, config));
 }
-export function isPlayable(c: Card, store: CatalogueStore, config: Config): boolean {
+export function isPlayable(c: Card, store: Pick<CatalogueStore, 'data'>, config: Config): boolean {
   const source = store.data.sources[c.sourceKey];
   return (
     c.status === 'published' &&

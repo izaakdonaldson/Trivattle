@@ -27,7 +27,7 @@ export function playerConfig() {
     tradeExpiryMs: process.env.TRADE_EXPIRY_MS ? Number(process.env.TRADE_EXPIRY_MS) : undefined,
     starterPacks: process.env.STARTER_PACKS ? Number(process.env.STARTER_PACKS) : undefined,
     weights: process.env.PACK_WEIGHTS ? JSON.parse(process.env.PACK_WEIGHTS) : undefined,
-    emptyPool: process.env.PACK_EMPTY_POOL,
+    emptyPool: process.env.PACK_EMPTY_POOL || undefined,
     reconnectMs: process.env.RECONNECT_MS ? Number(process.env.RECONNECT_MS) : undefined,
     lobbyIdleMs: process.env.LOBBY_IDLE_MS ? Number(process.env.LOBBY_IDLE_MS) : undefined,
     battleIdleMs: process.env.BATTLE_IDLE_MS ? Number(process.env.BATTLE_IDLE_MS) : undefined,

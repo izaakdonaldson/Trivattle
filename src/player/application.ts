@@ -1,3 +1,4 @@
+import { clientIP, logFailure } from '../deployment.js';
 import type { IncomingMessage, ServerResponse, Server as HttpServer } from 'node:http';
 import { Server } from 'socket.io';
 import { z } from 'zod';
@@ -37,14 +38,21 @@ export async function createApplication(options: {
   dbPath: string;
   baseURL: string;
   secret: string;
+  trustRenderProxy?: boolean;
   settings?: PlayerConfig;
   choose?: (n: number) => number;
   now?: () => number;
 }) {
   const db = openDatabase(options.dbPath),
     auth = createAuth(db, options.baseURL, options.secret);
-  await auth.migrate();
-  migrate(db);
+  try {
+    await auth.migrate();
+    migrate(db);
+  } catch {
+    logFailure('database_migration_failed');
+    db.close();
+    throw Error('Database migration failed');
+  }
   const inventory = new Inventory(
     db,
     options.store,
@@ -75,6 +83,10 @@ export async function createApplication(options: {
   }
   let io: Server | undefined;
   let closing = false;
+  let finishClose: () => void;
+  const closed = new Promise<void>((resolve) => {
+    finishClose = resolve;
+  });
   const origin = new URL(options.baseURL).origin;
   async function emitViews() {
     if (!io || closing) return;
@@ -195,7 +207,7 @@ export async function createApplication(options: {
         })
         .then(emitViews)
         .catch((e) => {
-          if (!closing) console.error('Player maintenance failed', e);
+          if (!closing) logFailure('player_maintenance_failed');
         })
         .finally(() => {
           maintaining = false;
@@ -205,7 +217,13 @@ export async function createApplication(options: {
     server.on('close', () => {
       closing = true;
       clearInterval(timer);
-      void auth.exclusive(() => db.close());
+      void auth
+        .exclusive(() => db.close())
+        .then(() => finishClose())
+        .catch(() => {
+          logFailure('database_close_failed');
+          finishClose();
+        });
     });
   }
   async function handle(req: IncomingMessage, res: ServerResponse): Promise<boolean> {
@@ -233,7 +251,7 @@ export async function createApplication(options: {
       if (req.headers.origin && req.headers.origin !== origin)
         throw new BattleError('Cross-origin request rejected', 403);
       if (p.startsWith('/api/auth/')) {
-        req.headers['x-trivattle-client-ip'] = req.socket.remoteAddress ?? 'unknown';
+        req.headers['x-trivattle-client-ip'] = clientIP(req, options.trustRenderProxy ?? false);
         await auth.handler(req, res);
         await emitViews();
         return true;
@@ -367,6 +385,8 @@ export async function createApplication(options: {
       )
         await emitViews();
     } catch (e) {
+      if (!(e instanceof BattleError) && !(e instanceof z.ZodError))
+        logFailure('api_request_failed');
       if (!res.headersSent)
         json(e instanceof BattleError ? e.status : e instanceof z.ZodError ? 400 : 500, {
           error: errorMessage(e),
@@ -385,6 +405,7 @@ export async function createApplication(options: {
     rooms,
     db,
     disconnect: () => io?.disconnectSockets(true),
+    closed,
     close: () => {
       closing = true;
       io?.close();

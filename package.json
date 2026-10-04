@@ -15,10 +15,12 @@
     "start": "node dist/src/battle/server.js",
     "test:browser": "playwright test",
     "cards:images": "tsx scripts/refresh-images.ts",
-    "db:migrate": "tsx scripts/migrate.ts"
+    "db:migrate": "tsx scripts/migrate.ts",
+    "catalogue:verify": "node dist/scripts/verify-catalogue.js",
+    "db:backup": "node dist/scripts/backup-database.js"
   },
   "engines": {
-    "node": ">=24"
+    "node": ">=24.18.0 <25"
   },
   "dependencies": {
     "better-auth": "^1.7.7",

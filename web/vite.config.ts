@@ -5,7 +5,7 @@ export default defineConfig({
   plugins: [react()],
   build: { outDir: '../dist/web', emptyOutDir: true },
   server: {
-    host: process.env.HOST ?? '127.0.0.1',
+    host: process.env.HOST || '127.0.0.1',
     port: 5173,
     strictPort: true,
     proxy: {

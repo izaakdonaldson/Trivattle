@@ -1,3 +1,4 @@
+import { deploymentConfig, logFailure } from '../deployment.js';
 import 'dotenv/config';
 import { CardArtCache } from '../card-art.js';
 import { createApplication, type Application } from '../player/application.js';
@@ -49,12 +50,12 @@ export function battleServer(
   } = {},
 ) {
   const store =
-      options.store ?? new CatalogueStore(process.env.CARD_DATA_DIR ?? 'data/catalogue', true),
+      options.store ?? new CatalogueStore(process.env.CARD_DATA_DIR || 'data/catalogue', true),
     config = options.config ?? loadConfig();
   const choose = options.choose ?? randomInt,
     now = options.now ?? Date.now;
   const imageCache =
-    options.imageCache ?? new CardArtCache(process.env.IMAGE_CACHE_DIR ?? 'data/art-cache');
+    options.imageCache ?? new CardArtCache(process.env.IMAGE_CACHE_DIR || 'data/art-cache');
   const matches = new Map<string, { state: BattleState; data: Catalogue; touched: number }>();
   let cards = playable(store, config);
   const stamp = () => {
@@ -84,6 +85,13 @@ export function battleServer(
       res.end(JSON.stringify(value));
     };
     try {
+      if (
+        new URL(req.url ?? '/', 'http://localhost').pathname === '/health' &&
+        req.method === 'GET'
+      ) {
+        json(200, { status: 'ok' });
+        return;
+      }
       const artPath = /^\/api\/card-art\/([^/?]+)$/.exec(
         new URL(req.url ?? '/', 'http://localhost').pathname,
       );
@@ -231,6 +239,8 @@ export function battleServer(
       });
       res.end(content);
     } catch (error) {
+      if (!(error instanceof BattleError) && !(error instanceof z.ZodError))
+        logFailure('http_request_failed');
       json(error instanceof BattleError ? error.status : error instanceof z.ZodError ? 400 : 500, {
         error:
           error instanceof BattleError
@@ -245,37 +255,79 @@ export function battleServer(
   return server;
 }
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  const port = Number(process.env.PORT ?? 3001);
-  const store = new CatalogueStore(process.env.CARD_DATA_DIR ?? 'data/catalogue', true);
-  const config = loadConfig();
-  let stamp = '';
-  const refresh = () => {
-    let next = 'missing';
-    try {
-      const stat = statSync(store.path);
-      next = `${stat.mtimeMs}:${stat.size}`;
-    } catch {
-      /* Surface catalogue prerequisites during onboarding. */
-    }
-    if (next !== stamp) {
-      store.refresh();
-      stamp = next;
-    }
-  };
-  const application = await createApplication({
-    store,
-    config,
-    refresh,
-    dbPath: process.env.PLAYER_DB ?? 'data/player/player.sqlite',
-    baseURL: process.env.BETTER_AUTH_URL ?? 'http://localhost:5173',
-    secret: process.env.BETTER_AUTH_SECRET ?? '',
-  });
-  battleServer({
-    store,
-    config,
-    application,
-    localLab: process.env.LOCAL_BATTLE_LAB === 'true' && process.env.NODE_ENV !== 'production',
-  }).listen(port, process.env.HOST ?? '127.0.0.1', () =>
-    console.log(`Trivattle: http://localhost:${port}`),
-  );
+  let stage = 'configuration';
+  try {
+    const deployment = deploymentConfig();
+    const { port, host } = deployment;
+    stage = 'catalogue';
+    const store = new CatalogueStore(process.env.CARD_DATA_DIR || 'data/catalogue', true);
+    const config = loadConfig();
+    console.log(
+      JSON.stringify({
+        event: 'catalogue_loaded',
+        published: Object.keys(store.data.published).length,
+      }),
+    );
+    if (!Object.keys(store.data.published).length)
+      console.warn('Catalogue missing or empty: upload and verify it before inviting players.');
+    let stamp = '';
+    const refresh = () => {
+      let next = 'missing';
+      try {
+        const stat = statSync(store.path);
+        next = `${stat.mtimeMs}:${stat.size}`;
+      } catch {
+        /* Surface catalogue prerequisites during onboarding. */
+      }
+      if (next !== stamp) {
+        store.refresh();
+        stamp = next;
+      }
+    };
+    stage = 'database_and_application';
+    const application = await createApplication({
+      store,
+      config,
+      refresh,
+      dbPath: process.env.PLAYER_DB || 'data/player/player.sqlite',
+      baseURL: deployment.baseURL,
+      secret: deployment.secret,
+      trustRenderProxy: deployment.trustRenderProxy,
+    });
+    const server = battleServer({
+      store,
+      config,
+      application,
+      localLab: process.env.LOCAL_BATTLE_LAB === 'true' && process.env.NODE_ENV !== 'production',
+    });
+    let stopping = false;
+    const stop = () => {
+      if (stopping) return;
+      stopping = true;
+      console.log('Trivattle shutting down');
+      const deadline = setTimeout(() => {
+        logFailure('shutdown_deadline_exceeded');
+        process.exit(1);
+      }, 10000);
+      application.close();
+      void application.closed.then(() => {
+        clearTimeout(deadline);
+        process.exit(0);
+      });
+    };
+    process.on('SIGTERM', stop);
+    process.on('SIGINT', stop);
+    server.on('error', () => {
+      logFailure('http_server_failed');
+      process.exit(1);
+    });
+    server.listen(port, host, () =>
+      console.log(
+        JSON.stringify({ event: 'server_started', host, port, origin: deployment.baseURL }),
+      ),
+    );
+  } catch {
+    logFailure(`startup_${stage}_failed`);
+    process.exitCode = 1;
+  }
 }

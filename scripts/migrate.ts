@@ -1,12 +1,10 @@
+import { deploymentConfig } from '../src/deployment.js';
 import 'dotenv/config';
 import { openDatabase, migrate } from '../src/player/database.js';
 import { createAuth } from '../src/player/auth.js';
-const db = openDatabase(process.env.PLAYER_DB ?? 'data/player/player.sqlite');
-const auth = createAuth(
-  db,
-  process.env.BETTER_AUTH_URL ?? 'http://localhost:5173',
-  process.env.BETTER_AUTH_SECRET ?? '',
-);
+const deployment = deploymentConfig();
+const db = openDatabase(process.env.PLAYER_DB || 'data/player/player.sqlite');
+const auth = createAuth(db, deployment.baseURL, deployment.secret);
 await auth.migrate();
 migrate(db);
 db.close();

@@ -1,3 +1,4 @@
+import { logFailure } from '../deployment.js';
 import { betterAuth } from 'better-auth';
 import { fromNodeHeaders, toNodeHandler } from 'better-auth/node';
 import { getMigrations } from 'better-auth/db/migration';
@@ -8,6 +9,11 @@ export function createAuth(db: DatabaseSync, baseURL: string, secret: string) {
   if (secret.length < 32) throw Error('BETTER_AUTH_SECRET must contain at least 32 characters');
   const auth = betterAuth({
     database: db,
+    logger: {
+      log(level) {
+        if (level === 'error' || level === 'warn') logFailure('authentication_' + level);
+      },
+    },
     baseURL,
     secret,
     trustedOrigins: [new URL(baseURL).origin],

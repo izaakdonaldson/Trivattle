@@ -10,3 +10,11 @@ playwright-report/
 data/player/
 
 data/art-cache/
+
+# Server-only answer exports and database backups
+data/cards-server*.json
+data/private-exports/
+data/backups/
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm

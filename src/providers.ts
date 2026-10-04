@@ -29,9 +29,9 @@ export class DeepSeek implements TextProvider {
     private http: HttpClient,
     private config: Config,
     private key = process.env.DEEPSEEK_API_KEY,
-    private model = process.env.DEEPSEEK_MODEL ?? 'deepseek-flash',
-    private base = process.env.DEEPSEEK_BASE_URL ?? 'https://api.deepseek.com',
-    thinking = process.env.DEEPSEEK_THINKING ??
+    private model = process.env.DEEPSEEK_MODEL || 'deepseek-flash',
+    private base = process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com',
+    thinking = process.env.DEEPSEEK_THINKING ||
       (new URL(base).hostname === 'api.deepseek.com' ? 'disabled' : 'auto'),
     private log?: (message: string) => void,
   ) {
@@ -122,7 +122,7 @@ export class JevDecisions implements DecisionProvider {
   constructor(
     private http: HttpClient,
     private key = process.env.JEV_API_KEY,
-    private model = process.env.JEV_MODEL ?? 'jev-latest',
+    private model = process.env.JEV_MODEL || 'jev-latest',
   ) {
     this.id = `jev:${model}`;
   }

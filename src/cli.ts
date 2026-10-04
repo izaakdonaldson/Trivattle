@@ -23,6 +23,7 @@ const program = new Command()
     'cache monthly top-1000 lists and exit without article or AI requests',
   )
   .option('--titles-file <path>', 'curated title list, one title per line')
+  .option('--only-requested', 'generate only articles supplied with --title or --titles-file')
   .option('--batch <count>', 'maximum eligible jobs to generate', Number, 50)
   .option('--concurrency <count>', 'cards to generate concurrently (1–16)', Number, 1)
   .option('--retry-failed', 'resume incomplete jobs')
@@ -51,12 +52,16 @@ const program = new Command()
   .option(
     '--catalogue <path>',
     'catalogue directory',
-    process.env.CARD_CATALOGUE ?? 'data/catalogue',
+    process.env.CARD_CATALOGUE || 'data/catalogue',
   )
   .option('--config <path>', 'gameplay configuration JSON');
 program.parse();
 const opts = program.opts();
 async function main() {
+  if (opts.onlyRequested && (!opts.title && !opts.titlesFile))
+    throw Error('--only-requested requires --title or --titles-file');
+  if (opts.onlyRequested && opts.retryFailed)
+    throw Error('--only-requested cannot be combined with --retry-failed');
   if (!Number.isInteger(opts.concurrency) || opts.concurrency < 1 || opts.concurrency > 16)
     throw Error('--concurrency must be an integer from 1 to 16');
   if (opts.skipLeakageReview && opts.revalidateTrivia)
@@ -137,7 +142,7 @@ async function main() {
     );
     return;
   }
-  const agent = process.env.WIKIMEDIA_USER_AGENT ?? '';
+  const agent = process.env.WIKIMEDIA_USER_AGENT || '';
   if (network && !/\(.+(?:@|https?:\/\/).+\)/.test(agent))
     throw Error(
       'Set WIKIMEDIA_USER_AGENT to Trivattle/0.1 (contact email or URL) before online operations',
@@ -272,7 +277,7 @@ async function main() {
             j.status !== 'published' &&
             j.status !== 'rejected' &&
             j.assignment &&
-            (!opts.popularOnly ||
+            (!(opts.popularOnly || opts.onlyRequested) ||
               titles.some(({ title }) => store.data.aliases[title.toLowerCase()] === j.pageId)),
         )
         .slice(0, opts.batch);

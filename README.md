@@ -1,5 +1,7 @@
 # Trivattle
 
+For public hosting, follow [Deploy on Render](DEPLOYMENT.md). It covers persistent storage, catalogue upload, HTTPS, DNS, backups, and the two-player acceptance checklist.
+
 Wikipedia collectible cards, persistent accounts and collections, booster packs, and private online 5v5 trivia battles. Node **24+**, React/Vite, Better Auth, SQLite, and Socket.IO. The existing offline JSON catalogue and combat engine remain the source of card definitions and battle rules.
 
 ## Play online
@@ -30,7 +32,7 @@ npm run build
 NODE_ENV=production npm start
 ```
 
-Internet hosting requires HTTPS, a websocket-capable reverse proxy, a stable auth secret, and a writable persistent volume. Use one Node process: active rooms are in memory, not shared between workers. Native HTTP derives authentication rate-limit IPs from the socket, ignoring client-supplied forwarding headers; behind a proxy its address shares that limit. Configure trusted proxy handling deliberately before scaling public enrollment.
+Internet hosting requires HTTPS, a websocket-capable reverse proxy, a stable auth secret, and a writable persistent volume. Use one Node process: active rooms are in memory, not shared between workers. Native HTTP uses the socket IP by default. On Render only, set `TRUST_RENDER_PROXY=true` to use the validated edge client IP; verify forwarding-header spoof resistance before launch.
 
 ### Storage and configuration
 
@@ -265,7 +267,8 @@ npm run cards -- --validate
 npm run cards -- --revalidate-trivia
 npm run cards -- --stats
 npm run cards -- --export data/cards-public.json
-npm run cards -- --export data/cards-server.json --include-answers
+mkdir -p data/private-exports
+npm run cards -- --export data/private-exports/cards-server.json --include-answers
 
 # Refresh measurement windows together, then make an explicit new reference population.
 npm run cards -- --refresh-pageviews --rank
