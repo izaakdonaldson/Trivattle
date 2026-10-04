@@ -84,18 +84,21 @@ export type TriviaProgress = {
   reviewed: boolean;
   errors: string[];
 };
+export type TriviaOptions = { skipLeakageReview?: boolean };
 export async function generateTrivia(
   source: Source,
   provider: TextProvider,
   config: Config,
   prior: Question[],
   onProgress: (p: TriviaProgress) => void,
+  options: TriviaOptions = {},
 ): Promise<Question[]> {
   let bank = [...prior];
   const conflicts: Conflict[] = [];
   const errors: string[] = [];
   let reviewed = false;
   for (let attempt = 0; attempt < config.trivia.attempts; attempt++) {
+    let leakage: PromiseSettledResult<Conflict[]> | undefined;
     if (bank.length < config.trivia.target) {
       try {
         const candidates = await provider.json(
@@ -131,15 +134,34 @@ export async function generateTrivia(
           }
         }
         if (drafts.length) {
-          const result = await provider.json(
-            accuracyPrompt,
-            {
-              source: source.text.slice(0, config.model.maxSourceChars),
-              revisionId: source.revisionId,
-              questions: drafts,
-            },
-            accuracySchema,
-          );
+          // Independent audits can overlap. Review the superset before pruning: removing
+          // rejected or excess questions cannot introduce a new cross-question leak.
+          const [accuracy, bankReview] = await Promise.allSettled([
+            provider.json(
+              accuracyPrompt,
+              {
+                source: source.text.slice(0, config.model.maxSourceChars),
+                revisionId: source.revisionId,
+                questions: drafts.map(
+                  ({ id, text, options, correctIndex, explanation, evidence }) => ({
+                    id,
+                    text,
+                    options,
+                    correctIndex,
+                    explanation,
+                    evidence,
+                  }),
+                ),
+              },
+              accuracySchema,
+            ),
+            options.skipLeakageReview
+              ? Promise.resolve([] as Conflict[])
+              : reviewBank(provider, source, [...bank, ...drafts]),
+          ]);
+          leakage = bankReview;
+          if (accuracy.status === 'rejected') throw accuracy.reason;
+          const result = accuracy.value;
           if (
             result.reviews.length !== drafts.length ||
             new Set(result.reviews.map((r) => r.id)).size !== drafts.length ||
@@ -165,22 +187,27 @@ export async function generateTrivia(
       .sort((a, b) => b.quality - a.quality || a.id.localeCompare(b.id))
       .slice(0, config.trivia.target);
     reviewed = false;
-    try {
-      const review = await reviewBank(provider, source, bank);
-      conflicts.push(...review);
-      const remove = new Set(review.map((c) => c.removeId));
-      bank = bank.filter((q) => !remove.has(q.id));
-      reviewed = review.length === 0;
-    } catch (e) {
-      errors.push(String(e));
-    }
+    if (!options.skipLeakageReview)
+      try {
+        if (leakage?.status === 'rejected') throw leakage.reason;
+        const review =
+          leakage?.status === 'fulfilled'
+            ? leakage.value
+            : await reviewBank(provider, source, bank);
+        conflicts.push(...review);
+        const remove = new Set(review.map((c) => c.removeId));
+        bank = bank.filter((q) => !remove.has(q.id));
+        reviewed = review.length === 0;
+      } catch (e) {
+        errors.push(String(e));
+      }
     onProgress({ questions: bank, conflicts: [...conflicts], reviewed, errors: [...errors] });
-    if (reviewed && bank.length >= config.trivia.target) {
+    if ((reviewed || options.skipLeakageReview) && bank.length >= config.trivia.target) {
       validateBank(bank, source, config);
       return bank;
     }
   }
-  if (reviewed && bank.length >= config.trivia.min) {
+  if ((reviewed || options.skipLeakageReview) && bank.length >= config.trivia.min) {
     validateBank(bank, source, config);
     return bank;
   }

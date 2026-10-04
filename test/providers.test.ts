@@ -82,6 +82,7 @@ test('DeepSeek defaults to deepseek-flash JSON output and bounds schema retries'
   });
   assert.equal(calls, 2);
   assert.equal(body.model, 'deepseek-flash');
+  assert.deepEqual(body.thinking, { type: 'disabled' });
   assert.equal(body.response_format.type, 'json_object');
   await assert.rejects(
     new DeepSeek(h, cfg(), '').json('test', {}, z.object({ answer: z.string() })),
@@ -178,4 +179,56 @@ test('Wikipedia follows canonical titles, resolves IDs, uses free images with pe
   assert(urls.some((u) => u.includes('Canonical%20%2F%20Name/with_html')));
   assert(urls[0]!.includes('pilicense=free'));
   assert(s.wordCount >= 500);
+});
+
+test('DeepSeek sends explicit thinking mode and reports request timing without request content', async () => {
+  const bodies: any[] = [];
+  const logs: string[] = [];
+  const h = client(async (_url, init) => {
+    bodies.push(JSON.parse(init!.body as string));
+    return response({
+      choices: [{ finish_reason: 'stop', message: { content: '{"ok":true}' } }],
+      usage: { completion_tokens: 4 },
+    });
+  });
+  for (const thinking of ['disabled', 'enabled', 'auto']) {
+    await new DeepSeek(
+      h,
+      cfg(),
+      'secret-key',
+      'deepseek-flash',
+      'https://api.deepseek.com',
+      thinking,
+      (m) => logs.push(m),
+    ).json('test', { text: 'private-input' }, z.object({ ok: z.boolean() }));
+  }
+  assert.deepEqual(
+    bodies.map((b) => b.thinking),
+    [{ type: 'disabled' }, { type: 'enabled' }, undefined],
+  );
+  assert(logs.some((l) => l.includes('output tokens=4')));
+  assert(!logs.join('').includes('secret-key'));
+  assert(!logs.join('').includes('private-input'));
+  assert.throws(
+    () => new DeepSeek(h, cfg(), 'fake', 'deepseek-flash', 'https://api.deepseek.com', 'invalid'),
+  );
+});
+
+test('HTTP reserves separate start slots for concurrent requests', async (t) => {
+  t.mock.method(Date, 'now', () => 1000);
+  const waits: number[] = [];
+  const h = new HttpClient(
+    { ...cfg().http, intervalMs: 250 },
+    'test',
+    async () => response({ ok: true }),
+    async (ms) => {
+      waits.push(ms);
+    },
+  );
+  await Promise.all([
+    h.json('https://example.org/a'),
+    h.json('https://example.org/b'),
+    h.json('https://example.org/c'),
+  ]);
+  assert.deepEqual(waits, [0, 250, 500]);
 });

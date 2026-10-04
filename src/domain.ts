@@ -190,5 +190,6 @@ export type Job = {
   draft?: Omit<Card, 'questionIds' | 'status'>;
   questions?: Question[];
   bankReviewed?: boolean;
+  leakageReviewSkipped?: boolean;
   publishedVersion?: string;
 };

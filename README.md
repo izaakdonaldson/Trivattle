@@ -80,9 +80,29 @@ Each source retains its canonical URL, revision, Wikidata ID, clean prose, summa
 
 The analytics client requests `all-access/user` daily data for the last **90 complete UTC days**, trying up to three earlier windows for delayed data. All 90 distinct dated values must be present; zero is valid, a gap is missing data. Incomplete analytics block ranking/publication rather than becoming zero. Measurement windows are cached until an explicit refresh. Ranking requires all included candidates to share a window.
 
-The default reference pool requires at least 30 eligible measured page IDs, with random discovery plus curated or popular discovery. This is a minimum safeguard, not a statistical guarantee of a representative sample. The committed seed list spans all six specific subject types. Popular discovery uses Wikimedia's daily top-article endpoint. Rarity uses raw total pageviews, descending rank and the configured 5/10/20/30/35% tiers. Ties share the midpoint rank, so proportions are approximate and equal views never receive different tiers. Population records retain every measurement and the exact ranking configuration. Article length never raises rarity.
+The default mixed reference pool requires at least 30 eligible measured page IDs, with random discovery plus curated or popular discovery. This is a minimum safeguard, not a statistical guarantee of a representative sample. The committed seed list spans all six specific subject types. Popular discovery uses Wikimedia's daily top-article endpoint. Rarity uses raw total pageviews, descending rank and the configured 5/10/20/30/35% tiers. Ties share the midpoint rank, so proportions are approximate and equal views never receive different tiers. Population records retain every measurement and the exact ranking configuration. Article length never raises rarity.
 
 Requests run sequentially with an informative User-Agent, spacing, request timeouts, bounded exponential backoff, `Retry-After`, and MediaWiki `maxlag` handling. Fetching/reviewing large catalogues can take time; pack and battle services never run this workflow.
+
+### Sample only popular articles
+
+```sh
+# Build and save a reusable title pool first (24 monthly pageview requests initially;
+# no article downloads or model calls):
+npm run cards -- --build-popular-pool
+
+# Randomly select 100 unattempted titles from that pool and generate up to 40 cards:
+npm run cards -- --popular-only 100 --batch 40
+
+# Use the last three completed calendar months instead:
+npm run cards -- --popular-only 100 --popular-months 3 --batch 40
+```
+
+`--popular-only` combines the top 1,000 pages from each of the last 24 completed calendar months by default (`--popular-months 1–24`). This is a **deduplicated union**, potentially larger than 1,000 titles, not an exact top-1,000 ranking across 90 days or two years. Wikimedia supplies daily and monthly top lists, not a direct rolling 90-day top list. Three calendar months approximate that shorter discovery window. `--as-of YYYY-MM-DD` can anchor the discovery history to an earlier date.
+
+Monthly responses and the readable title list are stored in `<catalogue>/popular-pool/`, with titles and period metadata in `pool.json`. Completed months are reused across runs; missing data fails explicitly and already fetched months stay cached for retry. Main Page, namespaced pages and obvious list/index/outline titles are removed before sampling. Each title has an equal chance of selection regardless of how many months it appeared. Previously attempted titles and known aliases are skipped, including rejected titles; use `--retry-failed` for failures or `--regenerate` to permit resampling. Exhaustion reports fewer selected candidates and never falls back to unrestricted random pages.
+
+Popular-only discovery cannot be combined with `--random`, `--popular`, `--title`, or `--titles-file`. It explicitly permits a popularity-biased rarity reference population without random-article seeds, using only sources discovered as popular. The minimum population size, prose checks and complete recent 90-day pageview cutoff still apply. Rarity is relative to this eligible popular sample; historical popularity does not guarantee current eligibility. Existing published cards remain stable. For later standalone ranking/rebalancing of this pool, set `rarity.referenceMode` to `"popular"` in your configuration (`"mixed"` is the default). `--build-popular-pool` exits before ingestion, ranking or generation; `--dry-run` performs no network calls or writes.
 
 ### Minimum popularity filter
 
@@ -99,9 +119,9 @@ npm run cards -- --rank --min-pageviews90d 0
 
 The cutoff is inclusive: exactly 50,000 passes. Lower totals are saved as rejected at the `pageviews` stage with the total, period and threshold; no AI generation occurs. Missing/incomplete analytics remain retryable failures. Cached measurements are checked too, including at ranking and before resuming generation, so an old pending job cannot bypass a raised cutoff. Rarity populations record the cutoff used; changed eligibility requires reranking unpublished assignments. Existing published card versions remain unchanged, but below-threshold pages are excluded from new reference pools. Run `--rank` to apply a changed cutoff to cached candidates; after lowering it, formerly low-traffic candidates can become pending again and `--retry-failed` can generate them. `--refresh-pageviews --rank` updates measurements and applies the filter together. Repeating `--title` also rechecks a cached candidate without refetching a complete measurement.
 
-With this filter, most uniformly random articles may be rejected; use curated/popular seeds and a larger random candidate batch. The minimum eligible reference-population size still applies **after** popularity filtering. `--dry-run` reports the active threshold without fetching counts.
+With this filter, most uniformly random articles may be rejected; use `--popular-only` to sample the historical popular pool instead. The minimum eligible reference-population size still applies **after** popularity filtering. `--dry-run` reports the active threshold without fetching counts.
 
-An exact top-50,000 rule needs a complete 90-day ranking of English article traffic, then an allowlist or the view count at rank 50,000 (with a tie policy). [Wikimedia's top-pages endpoint supplies only the top 1,000 per day or month](https://doc.wikimedia.org/generated-data-platform/aqs/analytics-api/examples/project-metrics.html); combining those lists does not recover the true 90-day top 50,000. The current script therefore implements the numeric cutoff, not a global rank guarantee. No rank-50,000 cutoff has been empirically measured here. A separately prepared ranked title list can be used with `--titles-file` (omit `--random` and `--popular` to keep discovery to that list), but the existing random/curated diversity gate would also need an explicit ranked-pool mode before treating that list as the complete reference population.
+An exact top-50,000 rule needs a complete 90-day ranking of English article traffic, then an allowlist or the view count at rank 50,000 (with a tie policy). [Wikimedia's top-pages endpoint supplies only the top 1,000 per day or month](https://doc.wikimedia.org/generated-data-platform/aqs/analytics-api/examples/project-metrics.html); combining those lists does not recover the true 90-day top 50,000. The current script therefore implements the numeric cutoff, not a global rank guarantee. No rank-50,000 cutoff has been empirically measured here. A separately prepared ranked title list can be used with `--titles-file` (omit `--random` and `--popular` to keep discovery to that list), but arbitrary curated lists still use the mixed reference-population gate; use `--popular-only` for the explicit popular reference mode.
 
 ## Models, grounding and publication gates
 
@@ -196,6 +216,31 @@ Additional interfaces: `getCardQuestions(cardId)` returns answer-free views; `ge
 8. Recovery restores 5 once, strictly below 40% max HP, only while still alive; it never revives a defeated card. No passive/effect/status persists into another match. A fresh match resets all usage flags and counters.
 
 The caller manages turns, targets and victory rules. Effects are fixed IDs with typed configuration; no model-supplied code executes. Matches should snapshot the balance/effectiveness configuration used for resolution.
+
+## Generation speed and diagnostics
+
+DeepSeek requests explicitly disable thinking by default on `api.deepseek.com`. The current DeepSeek Flash API otherwise enables high-effort thinking by default, which can add substantial latency to every generation and audit call. Set `DEEPSEEK_THINKING=enabled` to opt back in, or `auto` to use the provider's default. Custom compatible API base URLs default to `auto` so they are not sent DeepSeek-specific fields unless explicitly configured. These settings apply on the next CLI run, including resumed jobs.
+
+Accuracy and full-bank leakage reviews now run concurrently after candidate generation. The leakage review covers retained questions plus all grounded candidates before pruning; publication still requires both audits, complete accuracy-review coverage, deterministic grounding and a clean bank review. Removing rejected or excess candidates cannot introduce new leakage. Player-invisible evidence and source metadata are omitted from the leakage prompt. Question targets, retry budgets and quality checks are unchanged.
+
+```sh
+npm run cards -- --popular-only 100 --batch 40 --verbose
+# Resume existing jobs with timing output:
+npm run cards -- --retry-failed --verbose
+```
+
+For a hackathon demo, add `--skip-leakage-review` to skip AI cross-question leakage review, including for previously saved jobs:
+
+```sh
+npm run cards -- --retry-failed --skip-leakage-review --verbose
+npm run cards -- --popular-only 100 --batch 40 --skip-leakage-review --verbose
+```
+
+Accuracy review, evidence matching, schema validation, duplicate detection and question-count requirements still apply. The flag applies only to the current run; jobs record `leakageReviewSkipped: true` and do not claim a completed bank review. Omit it to restore normal review for subsequent generation. Existing published cards are unchanged; `--revalidate-trivia` can review them later and cannot be combined with the skip flag.
+
+Generation and retry runs print `Working on <article> [1/40]` before each card, then its result and separate published/processed counts. The denominator is the number of jobs being attempted, so failures do not count as cards made.
+
+`--verbose` reports AI request stages, thinking mode, elapsed seconds, output-token counts and schema retries without logging credentials or article content. A thinking-mode change can affect model judgments; audits remain mandatory, but no fixed latency or identical model quality is guaranteed. Card jobs remain sequential to keep catalogue writes and publication predictable. See [DeepSeek thinking mode](https://api-docs.deepseek.com/guides/thinking_mode/) for the API controls.
 
 ## Tests, fixtures and balance
 

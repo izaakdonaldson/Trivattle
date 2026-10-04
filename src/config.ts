@@ -53,6 +53,7 @@ export const configSchema = z
       .object({
         version: z.string(),
         minPopulation: z.number().int().min(2),
+        referenceMode: z.enum(['mixed', 'popular']).default('mixed'),
         tiers: z
           .array(
             z.tuple([

@@ -77,3 +77,97 @@ test('10 trustworthy questions accepted after target retry budget, but 9 rejecte
   p.count = 9;
   await assert.rejects(generateTrivia(source(), p, cfg(), [], () => {}));
 });
+
+test('accuracy and leakage audits overlap and cover every candidate before pruning', async () => {
+  let releaseAccuracy!: () => void;
+  const started: string[] = [];
+  const gate = new Promise<void>((resolve) => {
+    releaseAccuracy = resolve;
+  });
+  class Parallel extends MockText {
+    override async json<T>(task: string, input: any, schema: any): Promise<T> {
+      if (task.startsWith('Audit EACH')) {
+        started.push('accuracy');
+        await gate;
+      }
+      if (task.startsWith('Review the ENTIRE')) {
+        started.push('leakage');
+        assert.equal(input.questions.length, 12);
+        assert.equal(input.questions[0].evidence, undefined);
+        releaseAccuracy();
+      }
+      return super.json(task, input, schema);
+    }
+  }
+  const config = cfg();
+  config.trivia.target = 10;
+  const bank = await generateTrivia(source(), new Parallel(), config, [], () => {});
+  assert.deepEqual(started, ['accuracy', 'leakage']);
+  assert.equal(bank.length, 10);
+});
+
+test('a failed concurrent leakage audit preserves accurate questions but blocks publication', async () => {
+  class FailedReview extends MockText {
+    override async json<T>(task: string, input: any, schema: any): Promise<T> {
+      if (task.startsWith('Review the ENTIRE')) throw Error('Review service unavailable');
+      return super.json(task, input, schema);
+    }
+  }
+  const config = cfg();
+  config.trivia.attempts = 1;
+  let saved = 0;
+  await assert.rejects(
+    generateTrivia(source(), new FailedReview(), config, [], (p) => {
+      saved = p.questions.length;
+      assert.equal(p.reviewed, false);
+    }),
+    /pending review/,
+  );
+  assert.equal(saved, 12);
+});
+
+test('an incomplete accuracy audit never admits candidates even when leakage review passes', async () => {
+  class IncompleteAccuracy extends MockText {
+    override async json<T>(task: string, input: any, schema: any): Promise<T> {
+      if (task.startsWith('Audit EACH')) return schema.parse({ reviews: [] });
+      return super.json(task, input, schema);
+    }
+  }
+  const config = cfg();
+  config.trivia.attempts = 1;
+  await assert.rejects(
+    generateTrivia(source(), new IncompleteAccuracy(), config, [], (p) => {
+      assert.equal(p.questions.length, 0);
+      assert(p.errors.some((e) => e.includes('exactly once')));
+    }),
+  );
+});
+
+test('skip leakage review retains accuracy and local validation without claiming AI bank review', async () => {
+  const p = new MockText();
+  p.leak = true;
+  const bank = await generateTrivia(
+    source(),
+    p,
+    cfg(),
+    [],
+    (progress) => {
+      assert.equal(progress.reviewed, false);
+    },
+    { skipLeakageReview: true },
+  );
+  assert.equal(bank.length, 12);
+  validateBank(bank, source(), cfg());
+  assert(p.calls.some((c) => c.startsWith('Audit EACH')));
+  assert(!p.calls.some((c) => c.startsWith('Review the ENTIRE')));
+  p.accuracyReject = true;
+  await assert.rejects(
+    generateTrivia(source(), p, cfg(), [], () => {}, { skipLeakageReview: true }),
+  );
+  const invalid = questions();
+  invalid[0]!.evidence = 'Fabricated evidence that is not present in the source.';
+  await assert.rejects(
+    generateTrivia(source(), p, cfg(), invalid, () => {}, { skipLeakageReview: true }),
+    /Evidence not found/,
+  );
+});

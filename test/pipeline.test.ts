@@ -328,3 +328,94 @@ test('a changed cutoff replaces unpublished rarity populations before resuming A
     x.cleanup();
   }
 });
+
+test('explicit popular reference mode ranks and generates without unrestricted random discovery', async () => {
+  const x = setup();
+  try {
+    await x.store.withWriter(async () => {
+      const first = await x.pipeline.ingest('Observatory', 'popular');
+      await x.pipeline.ingest('Other', 'popular');
+      assert.throws(() => x.pipeline.rank(), /random candidates/);
+      x.config.rarity.referenceMode = 'popular';
+      const population = x.pipeline.rank();
+      assert.equal(population.config.referenceMode, 'popular');
+      assert.equal(population.members.length, 2);
+      await x.pipeline.generate(first);
+      assert.equal(first.status, 'published');
+    });
+  } finally {
+    x.cleanup();
+  }
+});
+
+test('popular reference mode retains the minimum size and excludes unrestricted random sources', async () => {
+  const x = setup();
+  try {
+    await x.store.withWriter(async () => {
+      await x.pipeline.ingest('Observatory', 'popular');
+      await x.pipeline.ingest('Other', 'random');
+      x.config.rarity.referenceMode = 'popular';
+      assert.throws(() => x.pipeline.rank(), /2 eligible candidates/);
+    });
+  } finally {
+    x.cleanup();
+  }
+});
+
+test('retry-failed can skip leakage review for previously saved jobs and records the bypass', async () => {
+  const x = setup();
+  try {
+    await x.store.withWriter(async () => {
+      const job = await x.pipeline.ingest('Observatory', 'curated');
+      await x.pipeline.ingest('Other', 'random');
+      x.pipeline.rank();
+      x.text.leak = true;
+      await x.pipeline.generate(job);
+      assert.equal(job.status, 'failed');
+      x.text.calls = [];
+      const demo = new Pipeline(x.store, x.wiki, x.text, new RulesDecisions(), x.config, {
+        skipLeakageReview: true,
+      });
+      await demo.retryFailed();
+      assert.equal(job.status, 'published');
+      assert.equal(job.bankReviewed, false);
+      assert.equal(job.leakageReviewSkipped, true);
+      assert(!x.text.calls.some((c) => c.startsWith('Review the ENTIRE')));
+      assert.deepEqual(demo.validateAll(), []);
+    });
+    const saved = new CatalogueStore(x.directory, true);
+    assert(
+      Object.values(saved.data.jobs).some(
+        (job) => job.status === 'published' && job.leakageReviewSkipped,
+      ),
+    );
+  } finally {
+    x.cleanup();
+  }
+});
+
+test('batch progress identifies the current article before work and counts publications separately from failures', async () => {
+  const x = setup();
+  try {
+    await x.store.withWriter(async () => {
+      const first = await x.pipeline.ingest('Observatory', 'curated');
+      const second = await x.pipeline.ingest('Other', 'random');
+      x.pipeline.rank();
+      const messages: string[] = [];
+      const pipeline = new Pipeline(x.store, x.wiki, x.text, new RulesDecisions(), x.config, {
+        onProgress: (message) => {
+          messages.push(message);
+          if (message.startsWith('Working on Observatory')) assert.equal(x.text.calls.length, 0);
+          if (message.startsWith('Working on Other')) x.text.failTrivia = true;
+        },
+      });
+      await pipeline.generateBatch([first, second]);
+      assert.equal(messages[0], 'Working on Observatory [1/2]');
+      assert.match(messages[1]!, /1\/2 cards published; 1\/2 processed/);
+      assert.equal(messages[2], 'Working on Other [2/2]');
+      assert.match(messages[3]!, /failed\/trivia.*1\/2 cards published; 2\/2 processed/);
+    });
+  } finally {
+    x.cleanup();
+  }
+});

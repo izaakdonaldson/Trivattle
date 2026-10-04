@@ -8,16 +8,24 @@ import { HttpClient } from './http.js';
 import { Wikipedia } from './wikipedia.js';
 import { DeepSeek, JevDecisions, RulesDecisions } from './providers.js';
 import { Pipeline } from './pipeline.js';
+import { buildPopularPool, popularMonths, samplePopular } from './popular.js';
 import type { Source } from './domain.js';
 const program = new Command()
   .name('generate-cards')
   .description('Offline Wikipedia card generation; cached reads need no credentials.')
   .option('--title <title>', 'ingest one article')
   .option('--random <count>', 'discover random articles', Number)
-  .option('--popular <count>', 'discover popular articles', Number)
+  .option('--popular <count>', 'discover popular articles from a recent daily list', Number)
+  .option('--popular-only <count>', 'sample only from cached monthly top-1000 lists', Number)
+  .option('--popular-months <count>', 'completed months in the popular pool (1–24)', Number, 24)
+  .option(
+    '--build-popular-pool',
+    'cache monthly top-1000 lists and exit without article or AI requests',
+  )
   .option('--titles-file <path>', 'curated title list, one title per line')
   .option('--batch <count>', 'maximum eligible jobs to generate', Number, 50)
   .option('--retry-failed', 'resume incomplete jobs')
+  .option('--skip-leakage-review', 'skip AI cross-question leakage review for this run (demo mode)')
   .option(
     '--min-pageviews90d <count>',
     'minimum complete 90-day views (default 50000; 0 disables cutoff)',
@@ -36,6 +44,7 @@ const program = new Command()
   .option('--export <path>', 'export public cards without answers')
   .option('--include-answers', 'include full trivia in server-only export')
   .option('--stats', 'show generation statistics')
+  .option('--verbose', 'log AI request timing, output tokens and schema retries')
   .option('--dry-run', 'show intended actions without network calls, generation or file writes')
   .option(
     '--catalogue <path>',
@@ -46,10 +55,30 @@ const program = new Command()
 program.parse();
 const opts = program.opts();
 async function main() {
-  for (const key of ['random', 'popular', 'batch'])
-    if (opts[key] !== undefined && (!Number.isInteger(opts[key]) || opts[key] < 1))
-      throw Error(`--${key} must be a positive integer`);
+  if (opts.skipLeakageReview && opts.revalidateTrivia)
+    throw Error('--skip-leakage-review cannot be combined with --revalidate-trivia');
+  for (const key of ['random', 'popular', 'popularOnly', 'batch'])
+    if (opts[key] !== undefined && (!Number.isSafeInteger(opts[key]) || opts[key] < 1))
+      throw Error(`--${key === 'popularOnly' ? 'popular-only' : key} must be a positive integer`);
+  const now = opts.asOf ? new Date(opts.asOf + 'T00:00:00Z') : new Date();
+  if (
+    opts.asOf &&
+    (!/^\d{4}-\d{2}-\d{2}$/.test(opts.asOf) ||
+      !Number.isFinite(+now) ||
+      now.toISOString().slice(0, 10) !== opts.asOf)
+  )
+    throw Error('Invalid --as-of date');
+  const poolMonths =
+    opts.popularOnly || opts.buildPopularPool ? popularMonths(opts.popularMonths, now) : undefined;
+  if (
+    (opts.popularOnly || opts.buildPopularPool) &&
+    (opts.random || opts.popular || opts.title || opts.titlesFile)
+  )
+    throw Error(
+      'Popular-only discovery cannot be combined with --random, --popular, --title or --titles-file',
+    );
   const cfg = loadConfig(opts.config);
+  if (opts.popularOnly) cfg.rarity.referenceMode = 'popular';
   if (opts.minPageviews90d !== undefined) {
     if (!Number.isSafeInteger(opts.minPageviews90d) || opts.minPageviews90d < 0) {
       throw Error('--min-pageviews90d must be a nonnegative safe integer');
@@ -69,6 +98,8 @@ async function main() {
     titles.length ||
     opts.random ||
     opts.popular ||
+    opts.popularOnly ||
+    opts.buildPopularPool ||
     opts.retryFailed ||
     opts.refreshPageviews ||
     opts.revalidateTrivia ||
@@ -83,6 +114,15 @@ async function main() {
           titles,
           random: opts.random ?? 0,
           popular: opts.popular ?? 0,
+          popularOnly: opts.popularOnly ?? 0,
+          popularPool:
+            opts.popularOnly || opts.buildPopularPool
+              ? {
+                  months: poolMonths,
+                  path: resolve(store.directory, 'popular-pool/pool.json'),
+                  method: 'union-of-monthly-top-1000',
+                }
+              : undefined,
           batch: opts.batch,
           actions: opts,
           cachedCards: Object.keys(store.data.published).length,
@@ -100,9 +140,22 @@ async function main() {
     );
   const http = new HttpClient(cfg.http, agent || 'Trivattle-offline');
   const wiki = new Wikipedia(http, cfg);
-  const provider = new DeepSeek(http, cfg);
+  const provider = new DeepSeek(
+    http,
+    cfg,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    opts.verbose ? (message) => console.error(message) : undefined,
+  );
   const decisions = process.env.JEV_API_KEY ? new JevDecisions(http) : new RulesDecisions();
-  const pipeline = new Pipeline(store, wiki, provider, decisions, cfg);
+  const pipeline = new Pipeline(store, wiki, provider, decisions, cfg, {
+    skipLeakageReview: !!opts.skipLeakageReview,
+    onProgress: (message) => console.log(message),
+  });
+  if (opts.skipLeakageReview)
+    console.log('AI leakage review skipped; accuracy and local validation remain enabled.');
   const report = () => {
     if (opts.validate) {
       const errors = pipeline.validateAll();
@@ -144,6 +197,28 @@ async function main() {
     return;
   }
   await store.withWriter(async () => {
+    if (opts.popularOnly || opts.buildPopularPool) {
+      const directory = resolve(store.directory, 'popular-pool');
+      const pool = await buildPopularPool(http, directory, opts.popularMonths, now);
+      console.log(
+        `Popular pool: ${pool.titles.length} unique titles across ${pool.months.length} months; ${directory}/pool.json`,
+      );
+      if (opts.buildPopularPool) return;
+      const selected = samplePopular(
+        pool.titles,
+        opts.popularOnly,
+        opts.regenerate
+          ? []
+          : [
+              ...Object.values(store.data.jobs).map((job) => job.title),
+              ...Object.keys(store.data.aliases),
+            ],
+      );
+      console.log(
+        `Selected ${selected.length} of ${opts.popularOnly} requested popular candidates`,
+      );
+      titles.push(...selected.map((title) => ({ title, discovery: 'popular' as const })));
+    }
     if (opts.random)
       titles.push(
         ...(await wiki.random(opts.random)).map((title) => ({
@@ -158,13 +233,12 @@ async function main() {
           discovery: 'popular' as const,
         })),
       );
-    for (const { title, discovery } of titles) {
+    for (const [index, { title, discovery }] of titles.entries()) {
+      console.log(`Ingesting ${title} [${index + 1}/${titles.length}]`);
       const j = await pipeline.ingest(title, discovery, opts.regenerate);
       console.log(`${title}: ${j.status}/${j.stage}`);
     }
     if (opts.refreshPageviews) {
-      const now = opts.asOf ? new Date(opts.asOf + 'T00:00:00Z') : new Date();
-      if (Number.isNaN(+now)) throw Error('Invalid --as-of date');
       for (const [key, source] of Object.entries(store.data.sources)) {
         store.data.views[key] = await wiki.pageviews(source, now);
         store.save();
@@ -187,12 +261,16 @@ async function main() {
     if (opts.retryFailed) await pipeline.retryFailed();
     else if (titles.length || opts.rebalance) {
       const jobs = Object.values(store.data.jobs)
-        .filter((j) => j.status !== 'published' && j.status !== 'rejected' && j.assignment)
+        .filter(
+          (j) =>
+            j.status !== 'published' &&
+            j.status !== 'rejected' &&
+            j.assignment &&
+            (!opts.popularOnly ||
+              titles.some(({ title }) => store.data.aliases[title.toLowerCase()] === j.pageId)),
+        )
         .slice(0, opts.batch);
-      for (const job of jobs) {
-        await pipeline.generate(job);
-        console.log(`${job.title}: ${job.status}/${job.stage}`);
-      }
+      await pipeline.generateBatch(jobs);
     }
     if (Object.values(store.data.jobs).some((j) => j.status === 'failed')) process.exitCode = 1;
   });

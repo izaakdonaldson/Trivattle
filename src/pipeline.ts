@@ -13,7 +13,7 @@ import {
   type DecisionProvider,
   type TextProvider,
 } from './providers.js';
-import { generateTrivia, validateBank } from './trivia.js';
+import { generateTrivia, validateBank, type TriviaOptions } from './trivia.js';
 import { rankPopulation } from './rarity.js';
 import type { Config } from './config.js';
 export class Pipeline {
@@ -23,6 +23,7 @@ export class Pipeline {
     readonly text: TextProvider,
     readonly decisions: DecisionProvider,
     readonly config: Config,
+    readonly triviaOptions: TriviaOptions & { onProgress?: (message: string) => void } = {},
   ) {}
   private save(job: Job) {
     job.updatedAt = new Date().toISOString();
@@ -139,12 +140,15 @@ export class Pipeline {
     const sources = Object.values(this.store.data.sources);
     const latest = new Map<number, Source>();
     for (const s of sources) latest.set(s.pageId, s);
-    const candidates = [...latest.values()].filter((s) =>
-      meetsPageviewThreshold(this.store.data.views[`${s.pageId}:${s.revisionId}`], this.config),
+    const candidates = [...latest.values()].filter(
+      (s) =>
+        meetsPageviewThreshold(this.store.data.views[`${s.pageId}:${s.revisionId}`], this.config) &&
+        (this.config.rarity.referenceMode !== 'popular' || s.discovery === 'popular'),
     );
     const diverse =
-      candidates.some((s) => s.discovery === 'random') &&
-      candidates.some((s) => s.discovery === 'curated' || s.discovery === 'popular');
+      this.config.rarity.referenceMode === 'popular' ||
+      (candidates.some((s) => s.discovery === 'random') &&
+        candidates.some((s) => s.discovery === 'curated' || s.discovery === 'popular'));
     const population = rankPopulation(
       candidates.map((s) => this.store.data.views[`${s.pageId}:${s.revisionId}`]!),
       this.config,
@@ -157,7 +161,8 @@ export class Pipeline {
       const previous = job.assignment && this.store.data.populations[job.assignment.populationId];
       if (
         !job.assignment ||
-        previous?.eligibility?.minPageviews90d !== this.config.ingestion.minPageviews90d
+        previous?.eligibility?.minPageviews90d !== this.config.ingestion.minPageviews90d ||
+        (previous?.config.referenceMode ?? 'mixed') !== this.config.rarity.referenceMode
       ) {
         job.assignment = population.assignments[job.pageId];
         // A new eligible population can change rarity and therefore the required attack slots.
@@ -263,15 +268,18 @@ export class Pipeline {
             ),
           );
           job.bankReviewed = progress.reviewed;
+          job.leakageReviewSkipped = !!this.triviaOptions.skipLeakageReview;
           for (const message of progress.errors)
             if (!job.errors.some((e) => e.message === message))
               job.errors.push({ stage: 'trivia', message, at: new Date().toISOString() });
           this.save(job);
         },
+        this.triviaOptions,
       );
       job.stage = 'publish';
       validateBank(questions, source, cfg);
-      if (!job.bankReviewed) throw Error('Final bank review required');
+      if (!job.bankReviewed && !this.triviaOptions.skipLeakageReview)
+        throw Error('Final bank review required');
       const card = validateCard(
         { ...job.draft, status: 'published', questionIds: questions.map((q) => q.id) },
         cfg,
@@ -299,6 +307,17 @@ export class Pipeline {
       this.save(job);
     } catch (e) {
       this.fail(job, e);
+    }
+  }
+  async generateBatch(jobs: Job[]) {
+    let published = 0;
+    for (const [index, job] of jobs.entries()) {
+      this.triviaOptions.onProgress?.(`Working on ${job.title} [${index + 1}/${jobs.length}]`);
+      await this.generate(job);
+      if (job.status === 'published') published++;
+      this.triviaOptions.onProgress?.(
+        `${job.title}: ${job.status}/${job.stage} — ${published}/${jobs.length} cards published; ${index + 1}/${jobs.length} processed`,
+      );
     }
   }
   async retryFailed() {
@@ -330,7 +349,7 @@ export class Pipeline {
         }
       }
     }
-    for (const job of ready.filter((job) => job.assignment)) await this.generate(job);
+    await this.generateBatch(ready.filter((job) => job.assignment));
   }
   validateAll() {
     const errors: string[] = [];

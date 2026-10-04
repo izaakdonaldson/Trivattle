@@ -23,14 +23,21 @@ export interface TextProvider {
 }
 export class DeepSeek implements TextProvider {
   readonly id: string;
+  private thinking: 'enabled' | 'disabled' | 'auto';
   constructor(
     private http: HttpClient,
     private config: Config,
     private key = process.env.DEEPSEEK_API_KEY,
     private model = process.env.DEEPSEEK_MODEL ?? 'deepseek-flash',
     private base = process.env.DEEPSEEK_BASE_URL ?? 'https://api.deepseek.com',
+    thinking = process.env.DEEPSEEK_THINKING ??
+      (new URL(base).hostname === 'api.deepseek.com' ? 'disabled' : 'auto'),
+    private log?: (message: string) => void,
   ) {
-    this.id = `deepseek:${model}`;
+    if (!['enabled', 'disabled', 'auto'].includes(thinking))
+      throw Error('DEEPSEEK_THINKING must be enabled, disabled or auto');
+    this.thinking = thinking as typeof this.thinking;
+    this.id = `deepseek:${model}:thinking-${thinking}`;
   }
   async json<T>(task: string, input: unknown, schema: z.ZodType<T>): Promise<T> {
     if (!this.key)
@@ -39,11 +46,23 @@ export class DeepSeek implements TextProvider {
       );
     let error = '';
     for (let i = 0; i < this.config.model.schemaAttempts; i++) {
+      const started = Date.now();
+      const stage = task.startsWith('Generate article-specific')
+        ? 'trivia generation'
+        : task.startsWith('Audit EACH')
+          ? 'accuracy review'
+          : task.startsWith('Review the ENTIRE')
+            ? 'leakage review'
+            : 'card metadata';
+      this.log?.(
+        `[AI] ${stage}: request ${i + 1}/${this.config.model.schemaAttempts}, thinking=${this.thinking}`,
+      );
       const result = await this.http.json(this.base.replace(/\/$/, '') + '/chat/completions', {
         method: 'POST',
         headers: { Authorization: `Bearer ${this.key}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model: this.model,
+          ...(this.thinking === 'auto' ? {} : { thinking: { type: this.thinking } }),
           temperature: this.config.model.temperature,
           max_tokens: this.config.model.maxTokens,
           response_format: { type: 'json_object' },
@@ -63,10 +82,14 @@ export class DeepSeek implements TextProvider {
           ],
         }),
       });
+      this.log?.(
+        `[AI] ${stage}: ${((Date.now() - started) / 1000).toFixed(1)}s, finish=${result.choices?.[0]?.finish_reason ?? 'missing'}, output tokens=${result.usage?.completion_tokens ?? 'unknown'}`,
+      );
       try {
         if (result.choices?.[0]?.finish_reason !== 'stop') throw Error('Incomplete model response');
         return schema.parse(JSON.parse(result.choices[0].message.content));
       } catch {
+        this.log?.(`[AI] ${stage}: invalid or truncated response; schema retry needed`);
         error =
           'Prior response was incomplete or failed the JSON schema. Produce a complete valid JSON object.';
       }
@@ -274,7 +297,7 @@ export const bankSchema = z
   })
   .strict();
 export const accuracyPrompt =
-  'Audit EACH question independently against the supplied exact source revision. Check the stem and explanation, explicitly supported correct answer, exactly one defensible answer, plausible but definitely incorrect distractors, historical time frames for changing facts, not subjective or irrelevant footnotes. Do not approve uncertain facts. Return exactly one review per supplied ID. Quality measures independent factual value and clarity, not difficulty.';
+  'Audit EACH question independently against the supplied exact source revision. Check the stem and explanation, explicitly supported correct answer, exactly one defensible answer, plausible but definitely incorrect distractors, historical time frames for changing facts, not subjective or irrelevant footnotes. Do not approve uncertain facts. Return exactly one review per supplied ID. Quality measures independent factual value and clarity, not difficulty. Keep reason empty for accepted questions and concise for rejected questions.';
 export const bankPrompt =
   'Review the ENTIRE bank for duplicate facts and cross-question information leakage. Check stems, ALL four options including distractors, correct answers, and explanations; assume players remember earlier answers. Find paraphrases, synonyms, indirect giveaways, repeated factual relationships and clustered facts. Reading one question must not reveal another answer. Ignore unavoidable shared context such as the article name. Supporting evidence is not player-visible: only stems, options, answers and explanations can leak information. Return every conflicting pair with IDs a,b, why, and removeId for the weaker question. No conflicts means an empty array. Do not omit conflicts merely because the question wording differs.';
 export async function reviewBank(
@@ -282,7 +305,21 @@ export async function reviewBank(
   s: Source,
   questions: Question[],
 ): Promise<Conflict[]> {
-  const result = await provider.json(bankPrompt, { title: s.title, questions }, bankSchema);
+  if (questions.length < 2) return [];
+  // Only player-visible fields are needed for leakage; evidence and source metadata add noise.
+  const visible = questions.map(({ id, text, options, correctIndex, explanation, quality }) => ({
+    id,
+    text,
+    options,
+    correctIndex,
+    explanation,
+    quality,
+  }));
+  const result = await provider.json(
+    bankPrompt,
+    { title: s.title, questions: visible },
+    bankSchema,
+  );
   const ids = new Set(questions.map((q) => q.id));
   for (const c of result.conflicts)
     if (!ids.has(c.a) || !ids.has(c.b) || c.a === c.b || ![c.a, c.b].includes(c.removeId))

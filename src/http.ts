@@ -18,8 +18,10 @@ export class HttpClient {
   ) {}
   async json(url: string, init: RequestInit = {}): Promise<any> {
     for (let attempt = 0; attempt < this.config.attempts; attempt++) {
-      await this.sleep(Math.max(0, this.next - Date.now()));
-      this.next = Date.now() + this.config.intervalMs;
+      // Reserve a slot before yielding so concurrent callers cannot start in a burst.
+      const start = Math.max(this.next, Date.now());
+      this.next = start + this.config.intervalMs;
+      await this.sleep(Math.max(0, start - Date.now()));
       try {
         const response = await this.transport(url, {
           ...init,
