@@ -29,6 +29,7 @@ test('filters insufficient, disambiguation, non-articles, lists and table-domina
 });
 test('rarity is view-ranked with exact tiers, deterministic ties, missing separate from zero', () => {
   const c = cfg();
+  c.ingestion.minPageviews90d = 0;
   const pool = Array.from({ length: 100 }, (_, i) => views(source(i + 1), 100 - i));
   const p = rankPopulation(pool, c, true);
   assert.deepEqual(
@@ -101,4 +102,45 @@ test('rules classifier tries specific subjects and generation is deterministic',
     assert.equal(card(r).hp, card('common').hp);
     assert.equal(card(r).defense, card('common').defense);
   }
+});
+
+test('popularity cutoff defaults to 50,000 and supports exact boundary, zero, and legacy configs', async () => {
+  const { configSchema } = await import('../src/config.js');
+  const { meetsPageviewThreshold, requireEligiblePageviews, RejectedArticle } =
+    await import('../src/wikipedia.js');
+  const c = cfg();
+  assert.equal(c.ingestion.minPageviews90d, 50000);
+  assert(!meetsPageviewThreshold(views(source(), 49999), c));
+  assert(meetsPageviewThreshold(views(source(), 50000), c));
+  assert.throws(() => requireEligiblePageviews(views(source(), 49999), c), RejectedArticle);
+  const missing = { ...views(), status: 'missing' as const, total: null, average: null };
+  assert.throws(
+    () => requireEligiblePageviews(missing, c),
+    (error) => error instanceof Error && !(error instanceof RejectedArticle),
+  );
+  c.ingestion.minPageviews90d = 0;
+  assert(meetsPageviewThreshold(views(source(), 0), c));
+  assert(!meetsPageviewThreshold(missing, c));
+  const legacy = structuredClone(c) as any;
+  delete legacy.ingestion.minPageviews90d;
+  assert.equal(configSchema.parse(legacy).ingestion.minPageviews90d, 50000);
+  legacy.ingestion.minPageviews90d = -1;
+  assert(!configSchema.safeParse(legacy).success);
+});
+
+test('rarity excludes obscure cached measurements and records the cutoff in population metadata', () => {
+  const c = cfg();
+  c.rarity.minPopulation = 2;
+  const population = rankPopulation(
+    [views(source(1), 49999), views(source(2), 50000), views(source(3), 90000)],
+    c,
+    true,
+  );
+  assert.deepEqual(
+    population.members.map((v) => v.pageId),
+    [3, 2],
+  );
+  assert.equal(population.assignments['1'], undefined);
+  assert.equal(population.eligibility.minPageviews90d, 50000);
+  assert.throws(() => rankPopulation([views(source(1), 10), views(source(2), 50000)], c, true));
 });

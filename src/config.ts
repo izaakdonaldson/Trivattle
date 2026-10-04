@@ -43,6 +43,7 @@ export const configSchema = z
       .refine((x) => x.min <= x.target && x.target <= x.max),
     ingestion: z.object({
       minWords: z.number().int().positive(),
+      minPageviews90d: z.number().int().nonnegative().default(50000),
       minParagraphs: z.number().int().positive(),
       minProseFraction: z.number().min(0).max(1),
       pageviewDays: z.literal(90),

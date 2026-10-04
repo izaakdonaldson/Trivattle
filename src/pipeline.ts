@@ -1,6 +1,11 @@
 import { hash, seededInt, validateCard, type Source, type Job } from './domain.js';
 import { CatalogueStore } from './store.js';
-import { RejectedArticle, type WikiProvider } from './wikipedia.js';
+import {
+  RejectedArticle,
+  meetsPageviewThreshold,
+  requireEligiblePageviews,
+  type WikiProvider,
+} from './wikipedia.js';
 import {
   makePlan,
   attackTextSchema,
@@ -44,8 +49,10 @@ export class Pipeline {
       const existing =
         Object.values(data.jobs).find((j) => j.pageId === pageId && j.status === 'published') ??
         Object.values(data.jobs).find((j) => j.pageId === pageId);
-      if (existing && existing.sourceKey && data.views[existing.sourceKey]?.status === 'complete')
+      if (existing && existing.sourceKey && data.views[existing.sourceKey]?.status === 'complete') {
+        this.checkCachedEligibility(existing);
         return existing;
+      }
     }
     const id = hash([
       title.toLowerCase(),
@@ -85,6 +92,7 @@ export class Pipeline {
           data.aliases[title.toLowerCase()] = source.pageId;
           delete data.jobs[id];
           this.store.save();
+          this.checkCachedEligibility(prior);
           return prior;
         }
         job.pageId = source.pageId;
@@ -95,8 +103,7 @@ export class Pipeline {
       this.save(job);
       if (data.views[job.sourceKey!]?.status !== 'complete')
         data.views[job.sourceKey!] = await this.wiki.pageviews(source);
-      if (data.views[job.sourceKey!]?.status !== 'complete')
-        throw Error('Missing or incomplete 90-day pageviews; not treated as zero');
+      requireEligiblePageviews(data.views[job.sourceKey!], this.config);
       job.stage = 'rarity';
       job.status = 'pending';
       this.save(job);
@@ -105,12 +112,35 @@ export class Pipeline {
     }
     return job;
   }
+  private checkCachedEligibility(job: Job): boolean {
+    // Existing playable versions remain immutable when the admin changes discovery filters.
+    if (job.status === 'published') return true;
+    try {
+      requireEligiblePageviews(
+        job.sourceKey ? this.store.data.views[job.sourceKey] : undefined,
+        this.config,
+      );
+      if (job.status === 'rejected' && job.stage === 'pageviews') {
+        job.status = 'pending';
+        job.stage = 'rarity';
+        this.save(job);
+      }
+      return true;
+    } catch (error) {
+      job.stage = 'pageviews';
+      this.fail(job, error);
+      return false;
+    }
+  }
   rank() {
+    for (const job of Object.values(this.store.data.jobs)) {
+      if (job.sourceKey) this.checkCachedEligibility(job);
+    }
     const sources = Object.values(this.store.data.sources);
     const latest = new Map<number, Source>();
     for (const s of sources) latest.set(s.pageId, s);
-    const candidates = [...latest.values()].filter(
-      (s) => this.store.data.views[`${s.pageId}:${s.revisionId}`]?.status === 'complete',
+    const candidates = [...latest.values()].filter((s) =>
+      meetsPageviewThreshold(this.store.data.views[`${s.pageId}:${s.revisionId}`], this.config),
     );
     const diverse =
       candidates.some((s) => s.discovery === 'random') &&
@@ -121,9 +151,19 @@ export class Pipeline {
       diverse,
     );
     this.store.data.populations[population.id] = population;
-    for (const j of Object.values(this.store.data.jobs))
-      if (j.status !== 'published' && !j.assignment && j.pageId && population.assignments[j.pageId])
-        j.assignment = population.assignments[j.pageId];
+    for (const job of Object.values(this.store.data.jobs)) {
+      if (job.status === 'published' || !job.pageId || !population.assignments[job.pageId])
+        continue;
+      const previous = job.assignment && this.store.data.populations[job.assignment.populationId];
+      if (
+        !job.assignment ||
+        previous?.eligibility?.minPageviews90d !== this.config.ingestion.minPageviews90d
+      ) {
+        job.assignment = population.assignments[job.pageId];
+        // A new eligible population can change rarity and therefore the required attack slots.
+        job.draft = undefined;
+      }
+    }
     this.store.save();
     return population;
   }
@@ -134,11 +174,21 @@ export class Pipeline {
       if (!job.sourceKey) throw Error('Source ingestion must succeed first');
       const source = this.store.source(job.sourceKey);
       const cfg = job.config;
+      job.stage = 'pageviews';
+      requireEligiblePageviews(this.store.data.views[job.sourceKey], this.config);
       job.stage = 'rarity';
       if (!job.assignment)
         throw Error(
           'Build a sufficiently diverse rarity reference population before generating cards',
         );
+      const reference = this.store.data.populations[job.assignment.populationId];
+      if (
+        !reference ||
+        reference.eligibility?.minPageviews90d !== this.config.ingestion.minPageviews90d ||
+        reference.members.some((views) => !meetsPageviewThreshold(views, this.config))
+      ) {
+        throw Error('Popularity eligibility changed; run --rank before resuming generation');
+      }
       if (!job.draft) {
         job.stage = 'metadata';
         job.providers.metadata = this.text.id;
@@ -263,7 +313,14 @@ export class Pipeline {
     const ready = jobs.filter(
       (job) => job.sourceKey && this.store.data.views[job.sourceKey]?.status === 'complete',
     );
-    if (ready.some((job) => !job.assignment)) {
+    if (
+      ready.some(
+        (job) =>
+          !job.assignment ||
+          this.store.data.populations[job.assignment.populationId]?.eligibility?.minPageviews90d !==
+            this.config.ingestion.minPageviews90d,
+      )
+    ) {
       try {
         this.rank();
       } catch (error) {

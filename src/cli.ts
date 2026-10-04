@@ -18,6 +18,11 @@ const program = new Command()
   .option('--titles-file <path>', 'curated title list, one title per line')
   .option('--batch <count>', 'maximum eligible jobs to generate', Number, 50)
   .option('--retry-failed', 'resume incomplete jobs')
+  .option(
+    '--min-pageviews90d <count>',
+    'minimum complete 90-day views (default 50000; 0 disables cutoff)',
+    Number,
+  )
   .option('--rank', 'compute a rarity population; published cards stay stable')
   .option('--rebalance', 'explicitly stage new versions for changed rarities')
   .option('--regenerate', 'fetch a source again; bump generationVersion in configuration first')
@@ -45,6 +50,12 @@ async function main() {
     if (opts[key] !== undefined && (!Number.isInteger(opts[key]) || opts[key] < 1))
       throw Error(`--${key} must be a positive integer`);
   const cfg = loadConfig(opts.config);
+  if (opts.minPageviews90d !== undefined) {
+    if (!Number.isSafeInteger(opts.minPageviews90d) || opts.minPageviews90d < 0) {
+      throw Error('--min-pageviews90d must be a nonnegative safe integer');
+    }
+    cfg.ingestion.minPageviews90d = opts.minPageviews90d;
+  }
   const store = new CatalogueStore(opts.catalogue, !!opts.dryRun);
   const titles: { title: string; discovery: Source['discovery'] }[] = [];
   if (opts.title) titles.push({ title: opts.title, discovery: 'manual' });
@@ -68,6 +79,7 @@ async function main() {
       JSON.stringify(
         {
           dryRun: true,
+          minPageviews90d: cfg.ingestion.minPageviews90d,
           titles,
           random: opts.random ?? 0,
           popular: opts.popular ?? 0,

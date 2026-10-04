@@ -84,6 +84,25 @@ The default reference pool requires at least 30 eligible measured page IDs, with
 
 Requests run sequentially with an informative User-Agent, spacing, request timeouts, bounded exponential backoff, `Retry-After`, and MediaWiki `maxlag` handling. Fetching/reviewing large catalogues can take time; pack and battle services never run this workflow.
 
+### Minimum popularity filter
+
+New candidates must have **at least 50,000 pageviews over the measured 90 complete UTC days** (about 556/day), in addition to the 500-word rule. This is a practical starting cutoff for excluding obscure articles, **not a measured equivalent of the top 50,000 articles**. All measurements remain English Wikipedia, `all-access/user` traffic.
+
+Set `ingestion.minPageviews90d` in `config/gameplay.json`, or override it for one run:
+
+```sh
+npm run cards -- --titles-file data/seed-titles.txt --random 200 --min-pageviews90d 50000
+npm run cards -- --rank --min-pageviews90d 100000
+# Disable the popularity cutoff, retaining all other eligibility checks:
+npm run cards -- --rank --min-pageviews90d 0
+```
+
+The cutoff is inclusive: exactly 50,000 passes. Lower totals are saved as rejected at the `pageviews` stage with the total, period and threshold; no AI generation occurs. Missing/incomplete analytics remain retryable failures. Cached measurements are checked too, including at ranking and before resuming generation, so an old pending job cannot bypass a raised cutoff. Rarity populations record the cutoff used; changed eligibility requires reranking unpublished assignments. Existing published card versions remain unchanged, but below-threshold pages are excluded from new reference pools. Run `--rank` to apply a changed cutoff to cached candidates; after lowering it, formerly low-traffic candidates can become pending again and `--retry-failed` can generate them. `--refresh-pageviews --rank` updates measurements and applies the filter together. Repeating `--title` also rechecks a cached candidate without refetching a complete measurement.
+
+With this filter, most uniformly random articles may be rejected; use curated/popular seeds and a larger random candidate batch. The minimum eligible reference-population size still applies **after** popularity filtering. `--dry-run` reports the active threshold without fetching counts.
+
+An exact top-50,000 rule needs a complete 90-day ranking of English article traffic, then an allowlist or the view count at rank 50,000 (with a tie policy). [Wikimedia's top-pages endpoint supplies only the top 1,000 per day or month](https://doc.wikimedia.org/generated-data-platform/aqs/analytics-api/examples/project-metrics.html); combining those lists does not recover the true 90-day top 50,000. The current script therefore implements the numeric cutoff, not a global rank guarantee. No rank-50,000 cutoff has been empirically measured here. A separately prepared ranked title list can be used with `--titles-file` (omit `--random` and `--popular` to keep discovery to that list), but the existing random/curated diversity gate would also need an explicit ranked-pool mode before treating that list as the complete reference population.
+
 ## Models, grounding and publication gates
 
 `TextProvider` and `DecisionProvider` in `src/providers.ts` are replaceable interfaces. DeepSeek uses JSON output and local Zod parsing with bounded repair attempts. Its roles are attack names/flavor, article-specific question generation, answer accuracy review and full-bank leakage review. The TypeSafe adapter uses documented `/v1/systemone` Choice questions with `state`, named `questions`, `criteria` and a model. Jev selects primary/attack types, allowed effects, passives and Rare A/B. Missing Jev credentials select a deterministic keyword classifier and thematic decision table; configured Jev failures stop the stage for retry rather than silently changing providers.

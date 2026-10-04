@@ -7,6 +7,30 @@ const analytics = 'https://wikimedia.org/api/rest_v1/metrics/pageviews';
 const iso = (d: Date) => d.toISOString().slice(0, 10);
 const stamp = (d: Date) => iso(d).replaceAll('-', '') + '00';
 export class RejectedArticle extends Error {}
+/** Missing measurements are not low traffic; callers retain them as retryable failures. */
+export function meetsPageviewThreshold(views: Views | undefined, config: Config): boolean {
+  return (
+    views?.status === 'complete' &&
+    views.total !== null &&
+    views.days === config.ingestion.pageviewDays &&
+    views.total >= config.ingestion.minPageviews90d
+  );
+}
+export function requireEligiblePageviews(views: Views | undefined, config: Config): void {
+  if (
+    !views ||
+    views.status !== 'complete' ||
+    views.total === null ||
+    views.days !== config.ingestion.pageviewDays
+  ) {
+    throw Error('Missing or incomplete 90-day pageviews; not treated as zero');
+  }
+  if (!meetsPageviewThreshold(views, config)) {
+    throw new RejectedArticle(
+      `Insufficient popularity: ${views.total} views over ${views.days} days (${views.start} to ${views.end}); minimum ${config.ingestion.minPageviews90d}`,
+    );
+  }
+}
 export function cleanArticle(html: string) {
   const $ = load(html);
   $(

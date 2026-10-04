@@ -49,6 +49,7 @@
   },
   "ingestion": {
     "minWords": 500,
+    "minPageviews90d": 50000,
     "minParagraphs": 5,
     "minProseFraction": 0.35,
     "pageviewDays": 90,

@@ -1,9 +1,10 @@
 import { hash, type Assignment, type Views } from './domain.js';
 import type { Config } from './config.js';
+import { meetsPageviewThreshold } from './wikipedia.js';
 export function rankPopulation(views: Views[], config: Config, diverse: boolean) {
   const unique = [
     ...new Map(
-      views.filter((v) => v.status === 'complete' && v.total !== null).map((v) => [v.pageId, v]),
+      views.filter((v) => meetsPageviewThreshold(v, config)).map((v) => [v.pageId, v]),
     ).values(),
   ].sort((a, b) => b.total! - a.total! || a.pageId - b.pageId);
   if (unique.length < config.rarity.minPopulation)
@@ -13,7 +14,8 @@ export function rankPopulation(views: Views[], config: Config, diverse: boolean)
   if (!diverse) throw Error('Rarity requires random candidates and curated or popular seeds');
   if (new Set(unique.map((v) => v.start + v.end)).size !== 1)
     throw Error('Rarity reference population must share a pageview period');
-  const populationId = hash({ version: config.rarity, views: unique });
+  const eligibility = { minPageviews90d: config.ingestion.minPageviews90d };
+  const populationId = hash({ version: config.rarity, eligibility, views: unique });
   const assignments: Record<string, Assignment> = {};
   unique.forEach((v) => {
     const rank = unique.findIndex((x) => x.total === v.total);
@@ -31,6 +33,7 @@ export function rankPopulation(views: Views[], config: Config, diverse: boolean)
     id: populationId,
     createdAt: new Date().toISOString(),
     config: config.rarity,
+    eligibility,
     members: unique,
     assignments,
   };

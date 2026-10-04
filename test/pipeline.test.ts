@@ -14,6 +14,7 @@ function setup() {
   const store = new CatalogueStore(directory);
   const config = cfg();
   config.rarity.minPopulation = 2;
+  config.ingestion.minPageviews90d = 0;
   const text = new MockText();
   let fetches = 0;
   const wiki: WikiProvider = {
@@ -250,6 +251,78 @@ test('retry-failed recovers missing analytics then establishes rarity and comple
       assert.equal(first.status, 'published', JSON.stringify(first.errors));
       assert.equal(second.status, 'published', JSON.stringify(second.errors));
       assert.equal(Object.keys(x.store.data.published).length, 2);
+    });
+  } finally {
+    x.cleanup();
+  }
+});
+
+test('low-traffic ingestion is rejected before AI, cache reused, and lower cutoff allows reconsideration', async () => {
+  const x = setup();
+  try {
+    await x.store.withWriter(async () => {
+      x.config.ingestion.minPageviews90d = 50;
+      const job = await x.pipeline.ingest('Observatory', 'curated');
+      assert.equal(job.status, 'rejected');
+      assert.equal(job.stage, 'pageviews');
+      assert.match(job.errors.at(-1)!.message, /10 views.*minimum 50/);
+      assert.equal(x.text.calls.length, 0);
+      const fetches = x.fetches();
+      await x.pipeline.ingest('Observatory');
+      assert.equal(x.fetches(), fetches);
+      x.config.ingestion.minPageviews90d = 10;
+      assert.equal((await x.pipeline.ingest('Observatory')).status, 'pending');
+      await x.pipeline.ingest('Other', 'random');
+      x.pipeline.rank();
+      await x.pipeline.generate(job);
+      assert.equal(job.status, 'published');
+      const version = job.publishedVersion;
+      x.config.ingestion.minPageviews90d = 50000;
+      assert.throws(() => x.pipeline.rank());
+      assert.equal(job.status, 'published');
+      assert.equal(job.publishedVersion, version);
+    });
+  } finally {
+    x.cleanup();
+  }
+});
+
+test('raising cutoff blocks cached jobs and retries, including jobs already assigned a rarity', async () => {
+  const x = setup();
+  try {
+    await x.store.withWriter(async () => {
+      const job = await x.pipeline.ingest('Observatory', 'curated');
+      await x.pipeline.ingest('Other', 'random');
+      x.pipeline.rank();
+      assert(job.assignment);
+      x.config.ingestion.minPageviews90d = 50;
+      await x.pipeline.generate(job);
+      assert.equal(job.status, 'rejected');
+      assert.equal(x.text.calls.length, 0);
+      assert.throws(() => x.pipeline.rank()); // only one article remains above the cutoff
+      assert.equal(Object.keys(x.store.data.published).length, 0);
+    });
+  } finally {
+    x.cleanup();
+  }
+});
+
+test('a changed cutoff replaces unpublished rarity populations before resuming AI generation', async () => {
+  const x = setup();
+  try {
+    await x.store.withWriter(async () => {
+      const job = await x.pipeline.ingest('Observatory', 'curated');
+      await x.pipeline.ingest('Other', 'random');
+      x.pipeline.rank();
+      const oldPopulation = job.assignment!.populationId;
+      x.config.ingestion.minPageviews90d = 10;
+      await x.pipeline.generate(job);
+      assert.equal(job.status, 'failed');
+      assert.match(job.errors.at(-1)!.message, /run --rank/);
+      assert.equal(x.text.calls.length, 0);
+      await x.pipeline.retryFailed();
+      assert.equal(job.status, 'published');
+      assert.notEqual(job.assignment!.populationId, oldPopulation);
     });
   } finally {
     x.cleanup();
