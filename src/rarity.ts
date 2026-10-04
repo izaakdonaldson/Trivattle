@@ -12,8 +12,6 @@ export function rankPopulation(views: Views[], config: Config, diverse: boolean)
       `Rarity requires ${config.rarity.minPopulation} eligible candidates with complete pageviews`,
     );
   if (!diverse) throw Error('Rarity requires random candidates and curated or popular seeds');
-  if (new Set(unique.map((v) => v.start + v.end)).size !== 1)
-    throw Error('Rarity reference population must share a pageview period');
   const eligibility = { minPageviews90d: config.ingestion.minPageviews90d };
   const populationId = hash({ version: config.rarity, eligibility, views: unique });
   const assignments: Record<string, Assignment> = {};

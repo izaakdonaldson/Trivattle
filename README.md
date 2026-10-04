@@ -1,8 +1,140 @@
-# Trivattle card catalogue
+# Trivattle
 
-Offline Wikipedia ingestion, card generation and validated trivia for a future trading-card game. TypeScript / Node 22+; a normalized JSON catalogue supplies fast, credential-free runtime reads. There is no pack opener, inventory, trading service, web server or multiplayer battle loop.
+Offline Wikipedia ingestion, card generation and validated trivia for a future trading-card game. TypeScript / Node 22+; a normalized JSON catalogue supplies fast, credential-free runtime reads. The local battle server and React frontend turn this catalogue into a playable hot-seat 5v5 game. Packs, inventories, trading, accounts and online multiplayer remain out of scope.
 
-## Quick start
+## Play a local battle
+
+```sh
+npm ci
+npm run dev
+# Open http://localhost:5173
+
+# Production build, served from one local process:
+npm run build
+npm start
+# Open http://localhost:3001
+```
+
+The server reads `data/catalogue/catalogue.json` without writing to it. No Wikimedia,
+DeepSeek or Jev calls occur during gameplay. Article images and optional Google Fonts
+load in the browser; unavailable article images use the supplied type artwork.
+The game remains usable without these external presentation resources.
+
+Use **Quick battle** for ten distinct published cards, or choose five cards for each
+player. Duplicate articles are allowed, including within a team. Use the (i) button to inspect a card. In the catalogue, the separate Add button
+builds your team. In battle, click a card's image/body to select it; select an attack
+row, then click the opposing card itself. Matchup labels appear below opposing cards.
+Choose an attacker, an attack row, an opposing target, and **Confirm attack**.
+Pass the device to the defender, who presses **Ready for Trivia**. After answering,
+review the result and continue to the next turn. The winner can rematch or choose
+new teams. Teams retain fixed positions: defeated neighbors never shift inward.
+
+Runtime settings: `CARD_DATA_DIR` selects the catalogue directory, `CARD_CONFIG`
+selects the gameplay JSON, `TYPE_CONFIG` selects the effectiveness JSON, and `PORT`
+sets the production server port (default 3001). For `npm run dev`, keep the API on
+3001 because the Vite proxy targets that port. These settings are shell environment
+variables; the battle server does not need or load provider credentials.
+
+Only published, non-quarantined cards with a complete validated 10–15-question bank
+and matching source revision can enter a new match. Missing cards produce an
+explicit prerequisite message; synthetic examples are never inserted into the
+real catalogue. Finish generation using the existing commands below if needed.
+
+### Card images, details and faster battles
+
+The importer accepts both `upload.wikimedia.org` and `thumb.wikimedia.org` image
+URLs. Repair image metadata on existing published cards with `npm run cards:images`.
+This uses Wikipedia's free-image API and preserves attribution; it changes only
+cached source image metadata, never card stats, source prose or trivia. Interrupted
+repairs resume from a small checkpoint. No image repair requests run during battle.
+
+`config/battle.json` sets `hpMultiplier` (default `0.6`). New matches clone each
+card with a reduced maximum HP, rounded to the nearest integer, without changing
+catalogue stats or generation seeds. Set this to `1` to restore full-length battles.
+Recovery thresholds and healing caps use that match's maximum HP.
+
+Expanded card details include article summaries and type/effect/passive icons.
+During a battle, article summaries and article links are omitted from the shared
+match response. The card-detail endpoint exposes them only for the active player's
+own cards during attack selection. Opponent inspection still shows stats and attack
+rules. This is a hot-seat UI restriction, not account authentication: the prebattle
+catalogue is public. Damage resolution now includes a prominent attack announcement.
+
+### Battle rules and integration
+
+`src/battle/engine.ts` exports `createBattle`, `applyCommand`, and `publicBattle`.
+Commands clone state and return a new serializable snapshot; failed commands never
+commit partial changes. `src/mechanics.ts` is the shared combat implementation for
+the engine, isolated tests and simulations. Existing helper exports remain available.
+
+Damage is `max(1, ceil((power × weaken × type − defense) × trivia × stalwart))`.
+Weaken is consumed by the next attack. Correct answers use a 0.5 trivia multiplier
+and suppress all attack effects, including Pierce and Heal. Incorrect answers enable
+the selected effect: Burn ticks for 5 on the affected owner's next two turn ends;
+Heal restores 10; Pierce ignores flat defense; Weaken reduces next attack power by
+20%; Splash deals 20% of calculated primary damage (floor, minimum 1) to living
+immediate neighbors. Reapplications refresh rather than stack.
+
+Stalwart reduces direct damage by 5%. Immune removes weaknesses but preserves
+resistance. Recovery restores 5 once when surviving damage crosses from at least
+40% HP to below 40%; it can react to direct, Splash, or Burn damage. Knockouts never
+revive. Resolve the full attack and effects, then check victory **before** ticking
+Burn on all living cards owned by the attacker. A victory skips those Burn ticks.
+Otherwise tick Burn, check victory again, and switch turns.
+
+Each match pins its card versions, questions, source metadata and balance/type
+configuration. Duplicate article copies share question-ID and stem-fingerprint
+history. Exhaustion defaults to half damage without effects or repeated questions.
+Combat events record calculated and actual damage separately; summary statistics
+count actual HP removed. Rarity never multiplies combat stats.
+
+The public contract lives in `src/battle/types.ts`, imported with type-only imports:
+
+| Endpoint                                 | Behavior                                                                                                     |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `GET /api/cards?q=&type=&rarity=&page=1` | Published playable cards; 20 per page, no trivia bank.                                                       |
+| `POST /api/battles`                      | `{ "teams": [["versionId", "..."], ["versionId", "..."]] }`, exactly five each, or `{ "quickStart": true }`. |
+| `GET /api/battles/:id`                   | Public state, pending safe question, events and authoritative statistics.                                    |
+| `POST /api/battles/:id/commands`         | Validated attack or answer; returns the updated public state.                                                |
+
+Every command includes `commandId`, `revision` (expected current revision), and
+`playerId`. Attacks also include `kind: "attack"`, `attackerId`, `attackId` and
+`targetId`; answers include `kind: "answer"`, `questionId` and `answerIndex` (0–3).
+Player IDs are `player-1` and `player-2`. Invalid input returns 400; invalid phase,
+actor, duplicate command or stale revision returns 409. Missing/expired matches
+return 404. Answers and explanations appear only after a valid answer submission.
+No generic grading endpoint, private catalogue path, or generation metadata is served.
+
+Matches live in server memory and expire after two hours without activity (cleaned
+on the next request). Browser refresh reconnects via a saved match ID; server restart
+loses matches. Hot-seat player IDs are turn checks, **not authentication**. The server
+binds to loopback; online use requires authentication, ownership authorization and a
+persistent match repository. No socket infrastructure is included.
+
+### Battle validation
+
+```sh
+npm test                    # Offline catalogue, mechanics, engine and HTTP tests
+npm run check               # Backend and frontend TypeScript
+npm run build               # Library/server plus frontend
+npx playwright install chromium
+npm run test:browser         # Isolated fixture server; full browser gameplay
+```
+
+Browser tests use a temporary synthetic catalogue, never the real database, and
+exercise setup, details, handoff, refresh, full matches, exhaustion, rematches and
+mobile/reduced-motion layouts. Run the build before browser tests. Screenshots and
+failure traces are written to ignored `test-results/`. No new linter is installed;
+Prettier supplies formatting checks.
+
+Card artwork reuses `images/type_icons.png` and `images/type_images.png` as CSS
+sprites. Layout follows the written design files: no compact rarity badges, red
+attack rows, distinct blue passive icons, real attack counts, and type-based fallback
+art. Holographic reflections respond to hover, Legendary sparkles pause offscreen,
+and reduced-motion users receive static cards. Narrow battlefields scroll horizontally
+to preserve adjacency.
+
+## Catalogue quick start
 
 ```sh
 npm ci
@@ -204,16 +336,16 @@ Additional interfaces: `getCardQuestions(cardId)` returns answer-free views; `ge
 
 ## Deterministic mechanics contract
 
-`src/mechanics.ts` supplies isolated helpers for integration tests and a future battle engine, not match orchestration. `freshCombatant` initializes match-local status; never store mutable combat state in the catalogue.
+`src/mechanics.ts` supplies isolated helpers for the battle engine and simulation; match orchestration lives in `src/battle/engine.ts`. `freshCombatant` initializes match-local status; never store mutable combat state in the catalogue.
 
 1. Resolve attack type against the defender's one type. Basic is neutral. Immune changes multipliers above 1 to 1 and leaves resistance unchanged.
 2. Apply flat defense, except Pierce ignores it **only on an incorrect answer** (or if explicitly enabled for exhaustion).
-3. Multiply `(power × typeMultiplier − defense)` by trivia multiplier, consumed Weaken multiplier and Stalwart multiplier, in that order. Round once with `ceil`, with minimum 1 damage.
-4. Record the resolved damage **before remaining-HP clamping**; subtract it from the primary target, then check Recovery.
+3. Multiply base power by consumed Weaken first; calculate `(power × weaken × typeMultiplier − defense)`, then apply trivia and Stalwart multipliers. Round once with `ceil`, with minimum 1 damage.
+4. Record the resolved damage **before remaining-HP clamping**; subtract it from the primary target, resolve attack effects, then check threshold-crossing Recovery.
 5. Only an incorrect answer activates an attack effect by default: Heal restores 10 up to max HP; Burn refreshes a non-stacking two-own-turn counter; Weaken sets a non-stacking flag consumed on the affected card's next attack (correct, incorrect or exhausted); Pierce already acted above.
 6. Splash uses `floor(resolved primary damage × fraction)`, minimum 1 for a positive primary hit. Hit only surviving immediate neighbor positions inside 0–4. No additional type/defense/Stalwart reduction and no attack/status effects or recursive splash. Recovery can react to HP crossing its threshold because it is a defensive passive, not a new attack.
-7. At the end of each affected card's owner's turn, the future engine calls `endOwnTurn` for **every surviving card on that team**, including ones that did not attack. Burn ticks for 5, decrements, and may trigger Recovery. Burn bypasses flat defense, Stalwart and Immune. Reapplication refreshes duration; damage does not stack.
-8. Recovery restores 5 once, strictly below 40% max HP, only while still alive; it never revives a defeated card. No passive/effect/status persists into another match. A fresh match resets all usage flags and counters.
+7. At the end of each affected card's owner's turn, the battle engine calls `endOwnTurn` for **every surviving card on that team**, including ones that did not attack. Burn ticks for 5, decrements, and may trigger Recovery. Burn bypasses flat defense, Stalwart and Immune. Reapplication refreshes duration; damage does not stack.
+8. Recovery restores 5 once when surviving damage crosses from at least 40% to strictly below 40% max HP; it never revives a defeated card. No passive/effect/status persists into another match. A fresh match resets all usage flags and counters.
 
 The caller manages turns, targets and victory rules. Effects are fixed IDs with typed configuration; no model-supplied code executes. Matches should snapshot the balance/effectiveness configuration used for resolution.
 

@@ -1,3 +1,4 @@
+import { isWikiImageUrl, wikiImage } from './wiki-images.js';
 import { load } from 'cheerio';
 import { HttpClient, HttpError } from './http.js';
 import { sourceSchema, viewsSchema, wordCount, type Source, type Views } from './domain.js';
@@ -140,11 +141,7 @@ export class Wikipedia implements WikiProvider {
     const reasons = filterArticle(meta, clean, this.config);
     if (reasons.length) throw new RejectedArticle(reasons.join('; '));
     let image: Source['image'] = null;
-    if (
-      meta.thumbnail?.source &&
-      /^https:\/\/upload\.wikimedia\.org\//.test(meta.thumbnail.source) &&
-      meta.pageimage
-    ) {
+    if (meta.thumbnail?.source && isWikiImageUrl(meta.thumbnail.source) && meta.pageimage) {
       let info: any = {};
       try {
         const result = await this.action({
@@ -156,16 +153,7 @@ export class Wikipedia implements WikiProvider {
       } catch {
         /* Attribution can be unavailable; preserve null instead of guessing. */
       }
-      const ext = info.extmetadata ?? {};
-      const plain = (v: any) => (v ? load(v).text().trim() : null);
-      image = {
-        url: meta.thumbnail.source,
-        fileName: meta.pageimage,
-        attribution: plain(ext.Artist?.value),
-        license: plain(ext.LicenseShortName?.value),
-        licenseUrl: ext.LicenseUrl?.value ?? null,
-        descriptionUrl: info.descriptionurl ?? null,
-      };
+      image = wikiImage(meta, info);
     }
     return sourceSchema.parse({
       pageId: meta.pageid,

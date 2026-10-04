@@ -1,0 +1,148 @@
+Implement a reusable **Trivattle card component** following a clean, futuristic, flat Material Design-inspired aesthetic, matching the card mockups.
+
+## Layout (top to bottom)
+
+1. **Header:** Small type icon on the left, followed by the Wikipedia article title. No text label for the type or rarity badge. The rarity should be recognizable from the card's appearance.
+
+2. **Image:** Large rounded rectangular Wikipedia image. If unavailable, use the existing placeholder background corresponding to the card's type. The placeholder background is determined by the card's **type**, not its rarity.
+
+3. **Stats:** Heart icon with HP, shield icon with DEF, displayed horizontally.
+
+4. **Attacks:** Compact rows separated by thin dividers, without individual buttons or backgrounds. Each row contains:
+   - **Left:** Small colored icon (20px) representing the attack's type, using the existing type icons.
+   - **Middle:** Attack name in bold red text. No description.
+   - **Right:** Small icon representing the attack's special effect, followed by the damage number in bold red. **The right icon represents the EFFECT, not the attack type.** If the attack has no effect, omit this icon.
+
+5. **Passive:** If present, display the passive name in blue at the bottom, with a unique blue Lucide icon representing that specific passive. No description on the card itself.
+
+## Effect icons
+
+I haven't created these assets yet. Use simple, consistent Lucide icons for now:
+
+- Burn: `Flame`
+- Heal: `HeartPlus`
+- Pierce: `Crosshair`
+- Weaken: `ArrowDown`
+- Splash: `Waves`
+
+## Passive icons
+
+Each passive must have its **own unique icon**. Do not use the same sparkle icon for every passive.
+
+Use these Lucide icons:
+
+| Passive | Lucide icon | Effect |
+|---|---|---|
+| Stalwart | `Shield` | Takes 5% less direct attack damage |
+| Recovery | `HeartPulse` | Restores 5 HP once when health drops below 40% |
+| Immune | `ShieldCheck` | Removes defensive type weaknesses, making super-effective attacks neutral |
+
+Use blue for passive names and icons, regardless of the card's rarity.
+
+Passive descriptions should only appear in the expanded card view, not on the compact card.
+
+## Rarity styling
+
+**Each rarity should have a distinct visual identity through its background, border, glow, and reflective effects.**
+
+Use the existing card mockups as visual references.
+
+The overall card layout must remain identical between rarities. Only the visual treatment changes.
+
+### Common — White/Gray
+
+- Clean white or very light gray background.
+- Subtle gray border.
+- Very light shadow.
+- No glow, shine, holographic effect, or particles.
+- Minimal and flat.
+- Should feel like the standard baseline card.
+
+### Uncommon — Green
+
+- Mostly white background with a very subtle green tint.
+- Thin green border.
+- Very faint green glow around the edges.
+- Slightly more vibrant than Common.
+- No holographic shine or animated particles.
+
+### Rare — Blue (Shiny)
+
+- Pale blue-tinted background.
+- Thin, vibrant blue border.
+- Soft blue outer glow.
+- **Subtle holographic/foil effect:** A translucent diagonal reflection occasionally moves across the card.
+- The shine should be understated and elegant, not distracting.
+- Slight reflective highlights near the edges.
+- Should feel noticeably more collectible than Uncommon.
+
+### Epic — Purple (Holographic)
+
+- Very light lavender background.
+- Vibrant purple border with a soft purple glow.
+- **More pronounced holographic effect than Rare.**
+- Subtle iridescent reflections, including occasional pink, blue, and purple highlights.
+- A slow, smooth animated shine that moves across the card surface.
+- Slightly luminous border.
+- Keep the text legible and the overall appearance modern.
+
+### Legendary — Gold (Shiny + Sparkles)
+
+- Warm white or very pale gold background.
+- Bright gold border with a soft golden glow.
+- **Premium holographic finish**, including subtle rainbow reflections.
+- Animated reflective shine moving across the card.
+- **Small animated sparkling particles** occasionally appearing around the edges and corners.
+- Sparkles should twinkle intermittently, not constantly overwhelm the design.
+- Slightly stronger glow than Epic.
+- Should immediately feel special while maintaining the same clean, flat visual style.
+
+### Rarity animation guidelines
+
+Implement the shiny and holographic effects using lightweight CSS animations where practical.
+
+- Common: No animation.
+- Uncommon: Static soft glow.
+- Rare: Gentle, occasional reflective shine.
+- Epic: Slow holographic shimmer and soft glowing border.
+- Legendary: Holographic shimmer, warm glowing border, and intermittent sparkles.
+
+Animations should be smooth, subtle, and performant, especially when many cards are displayed simultaneously.
+
+Prefer animating opacity and transforms rather than expensive visual filters.
+
+Pause or simplify decorative animations for offscreen cards, and respect `prefers-reduced-motion`.
+
+**Important:** Do not add rarity badges or text labels to the card. Rarity is communicated visually through its color and effects.
+
+## Styling
+
+- Minimal, flat, modern 2026 UI.
+- Soft rounded corners, subtle shadows, generous but efficient spacing.
+- Dark navy text on light backgrounds.
+- Avoid old-fashioned trading card frames or ornate decorative borders.
+- Use a consistent layout across all rarities.
+- Keep the card compact enough to display multiple cards together.
+- Avoid excessive gradients, oversized icons, or unnecessary decorations.
+- Attacks remain red regardless of rarity.
+- Passives remain blue regardless of rarity.
+- Card type icons retain their own established colors.
+- Clicking a card opens a detailed view showing attack descriptions, effects, passive information, rarity, and other metadata.
+
+## Important implementation details
+
+Use the actual existing card data, including each card's attacks, effects, passive, and rarity.
+
+Do not hardcode three attacks or assume every card has a passive. The existing rarity rules determine what appears:
+
+- **Common:** 1 attack, no effects, no passive.
+- **Uncommon:** 2 attacks, no effects, no passive.
+- **Rare:** 2 attacks, either one effect and one passive, or two effects and no passive.
+- **Epic:** 2 attacks, both with effects, and one passive.
+- **Legendary:** 3 attacks, two with effects, and one passive.
+
+Inspect the repository to locate the existing Wikipedia image placeholders and type icons rather than recreating them.
+
+Make the component responsive and reusable across collections, team selection, and battles.
+
+**The goal is a consistent, sleek trading card design where rarity progressively adds premium visual treatments without making the UI cluttered.**

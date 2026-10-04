@@ -1,5 +1,5 @@
 import { randomInt } from 'node:crypto';
-import { CatalogueStore } from './store.js';
+import type { CatalogueStore } from './store.js';
 import {
   hash,
   normalize,
@@ -22,7 +22,7 @@ export type QuestionSelection =
 /** Server-only module. Do not bundle a catalogue or this evaluator into browser code. */
 export class CachedCatalogue {
   constructor(
-    private store: CatalogueStore,
+    private store: Pick<CatalogueStore, 'data'>,
     private config: Config,
   ) {}
   getCard(id: string): Card | undefined {
@@ -53,7 +53,11 @@ export class CachedCatalogue {
     const c = this.getCard(id);
     return c ? c.questionIds.map((id) => publicQuestion(this.store.data.questions[id]!)) : [];
   }
-  getUnusedQuestion(cardId: string, usedQuestionIds: Set<string>): QuestionSelection {
+  getUnusedQuestion(
+    cardId: string,
+    usedQuestionIds: Set<string>,
+    choose: (length: number) => number = randomInt,
+  ): QuestionSelection {
     const card = this.getCard(cardId);
     if (!card) throw Error('Unknown playable card');
     const questions = this.getCardQuestions(cardId).filter(
@@ -67,7 +71,7 @@ export class CachedCatalogue {
         triviaMultiplier: this.config.battle.exhaustedMultiplier,
         activateEffects: this.config.battle.exhaustedEffects,
       };
-    const q = questions[randomInt(questions.length)]!;
+    const q = questions[choose(questions.length)]!;
     usedQuestionIds.add(`${q.pageId}/${q.id}`);
     usedQuestionIds.add(`${q.pageId}/stem/${hash(normalize(q.text))}`);
     return { kind: 'question', question: q };

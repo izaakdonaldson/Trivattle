@@ -5,12 +5,16 @@
   "type": "module",
   "description": "Offline Wikipedia card and validated trivia catalogue",
   "scripts": {
-    "build": "tsc && mkdir -p dist/config && cp config/*.json dist/config/",
-    "check": "tsc --noEmit",
+    "build": "tsc && mkdir -p dist/config && cp config/*.json dist/config/ && vite build --config web/vite.config.ts",
+    "check": "tsc --noEmit && tsc -p web/tsconfig.json",
     "test": "tsx --test test/*.test.ts",
     "cards": "tsx src/cli.ts",
     "simulate": "tsx scripts/simulate.ts",
-    "fixtures": "tsx scripts/fixtures.ts"
+    "fixtures": "tsx scripts/fixtures.ts",
+    "dev": "tsx scripts/dev.ts",
+    "start": "node dist/src/battle/server.js",
+    "test:browser": "playwright test",
+    "cards:images": "tsx scripts/refresh-images.ts"
   },
   "engines": {
     "node": ">=22"
@@ -19,15 +23,23 @@
     "cheerio": "^1.1.2",
     "commander": "^14.0.0",
     "dotenv": "^17.2.3",
+    "lucide-react": "^1.52.0",
     "proper-lockfile": "^4.1.2",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
     "zod": "^4.1.11"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@types/node": "^24.0.0",
     "@types/proper-lockfile": "^4.1.4",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.1",
     "prettier": "^3.9.9",
     "tsx": "^4.20.6",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vite": "^8.3.2"
   },
   "exports": {
     ".": "./dist/src/index.js"

@@ -1,0 +1,74 @@
+## Interactive card tilt and holographic reflections
+
+Implement subtle mouse-responsive interactions to make cards feel like physical collectible trading cards.
+
+**The effect should be VERY subtle, smooth, and premium.** Avoid exaggerated 3D rotations, dramatic scaling, or excessive movement.
+
+### 1. Mouse-responsive 3D tilt
+
+When the user hovers over a card:
+
+- The card tilts slightly toward the cursor's position.
+- Moving the cursor left/right changes the horizontal tilt.
+- Moving the cursor up/down changes the vertical tilt.
+- Maximum rotation: approximately **2 degrees on each axis**.
+- Use CSS `perspective(1000px)` and `rotateX()` / `rotateY()`.
+- Optionally lift the card vertically by 2px when hovered.
+- Do not significantly enlarge the card.
+- Use smooth interpolation so the card follows the cursor naturally rather than snapping between positions.
+- When the cursor leaves, smoothly return the card to its original flat orientation over approximately 250–350ms.
+
+All rarities can have this subtle tilt interaction.
+
+### 2. Mouse-tracking holographic shine
+
+For **Rare, Epic, and Legendary** cards, add a reflective highlight that responds to mouse movement.
+
+The reflection should move naturally across the card as though the user were tilting a physical holographic trading card under a light.
+
+Use a separate, pointer-transparent overlay above the card's background but below its readable text.
+
+The effect differs by rarity:
+
+| Rarity | Interactive reflection |
+|---|---|
+| Common | Tilt only; no shine |
+| Uncommon | Tilt with static green border glow |
+| Rare | Subtle blue-white reflective highlight that follows the cursor |
+| Epic | Soft iridescent purple, pink, and blue reflection |
+| Legendary | Gold-white reflection with very subtle rainbow foil and occasional sparkles |
+
+The highlight should be soft, translucent, and directional rather than a bright opaque glare.
+
+For Legendary cards, existing sparkles can become slightly more visible while hovering, but they should remain small and infrequent.
+
+### 3. Performance and implementation
+
+- Prefer CSS transforms and opacity for smooth GPU-accelerated animation.
+- Track pointer position relative to the card and normalize the coordinates.
+- Use CSS custom properties for tilt angles and highlight positions.
+- Use `requestAnimationFrame` if needed to avoid excessive updates.
+- Avoid React state updates on every mouse movement; prefer refs or direct CSS-variable updates.
+- Do not trigger layout recalculations unnecessarily.
+- Avoid expensive full-card blur or filter animations.
+- Enable `will-change: transform` only while interaction is active, where practical.
+- Decorative overlays must use `pointer-events: none` so they don't interfere with clicking cards.
+- Maintain readable text regardless of the reflection position.
+
+### 4. Accessibility and mobile behavior
+
+- Enable pointer-tracking tilt only on devices with a fine pointer and hover support.
+- On touch devices, display the normal card without continuous tilt tracking.
+- Respect `prefers-reduced-motion`: disable tilt, moving highlights, and animated sparkles.
+- Preserve visible keyboard focus states.
+- Do not interfere with clicking a card to open its detailed view.
+
+### Overall design goal
+
+The interaction should feel like gently moving a real trading card in your hand.
+
+**Think premium holographic collectible, not an exaggerated 3D animation.**
+
+At rest, the cards should look almost identical to the existing mockups. The premium effects should reveal themselves primarily when the player interacts with them.
+
+Keep the interaction consistent across the collection, team builder, pack reveals, and battle interfaces. Avoid continuous animation for large grids of cards that aren't being hovered.

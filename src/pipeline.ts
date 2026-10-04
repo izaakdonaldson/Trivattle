@@ -342,9 +342,12 @@ export class Pipeline {
     const failed = results.find((result) => result.status === 'rejected');
     if (failed?.status === 'rejected') throw failed.reason;
   }
-  async retryFailed() {
+  async retryFailed(options: { skipFailedPageviews?: boolean } = {}) {
     const jobs = Object.values(this.store.data.jobs).filter(
-      (j) => (j.status === 'failed' || j.status === 'pending') && !j.publishedVersion,
+      (j) =>
+        (j.status === 'failed' || j.status === 'pending') &&
+        !j.publishedVersion &&
+        !(options.skipFailedPageviews && j.status === 'failed' && j.stage === 'pageviews'),
     );
     for (const job of jobs) {
       if (!job.sourceKey || this.store.data.views[job.sourceKey]?.status !== 'complete') {

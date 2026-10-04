@@ -26,6 +26,7 @@ const program = new Command()
   .option('--batch <count>', 'maximum eligible jobs to generate', Number, 50)
   .option('--concurrency <count>', 'cards to generate concurrently (1–16)', Number, 1)
   .option('--retry-failed', 'resume incomplete jobs')
+  .option('--skip-failed-pageviews', 'exclude failed pageview jobs when retrying incomplete jobs')
   .option('--skip-leakage-review', 'skip AI cross-question leakage review for this run (demo mode)')
   .option(
     '--min-pageviews90d <count>',
@@ -262,7 +263,8 @@ async function main() {
       console.log(JSON.stringify({ bankReviewPassed: issues.length === 0, issues }, null, 2));
       if (issues.length) process.exitCode = 1;
     }
-    if (opts.retryFailed) await pipeline.retryFailed();
+    if (opts.retryFailed)
+      await pipeline.retryFailed({ skipFailedPageviews: !!opts.skipFailedPageviews });
     else if (titles.length || opts.rebalance) {
       const jobs = Object.values(store.data.jobs)
         .filter(

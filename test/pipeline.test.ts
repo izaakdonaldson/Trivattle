@@ -257,6 +257,36 @@ test('retry-failed recovers missing analytics then establishes rarity and comple
   }
 });
 
+test('retry-failed optionally skips failed pageviews and can retry them later', async () => {
+  const x = setup();
+  try {
+    await x.store.withWriter(async () => {
+      const normal = x.wiki.pageviews;
+      x.wiki.pageviews = async () => {
+        throw Error('Temporary analytics outage');
+      };
+      const first = await x.pipeline.ingest('Observatory', 'curated');
+      const second = await x.pipeline.ingest('Other', 'random');
+      let calls = 0;
+      x.wiki.pageviews = async (s) => {
+        calls++;
+        return normal(s);
+      };
+      await x.pipeline.retryFailed({ skipFailedPageviews: true });
+      assert.equal(calls, 0);
+      assert.equal(first.status, 'failed');
+      assert.equal(second.status, 'failed');
+      assert.equal(x.text.calls.length, 0);
+      await x.pipeline.retryFailed();
+      assert.equal(calls, 2);
+      assert.equal(first.status, 'published');
+      assert.equal(second.status, 'published');
+    });
+  } finally {
+    x.cleanup();
+  }
+});
+
 test('low-traffic ingestion is rejected before AI, cache reused, and lower cutoff allows reconsideration', async () => {
   const x = setup();
   try {
