@@ -240,7 +240,7 @@ export function applyCommand(
       command.questionId,
       command.answerIndex,
     );
-    s.feedback = { question: pending.question, ...answer };
+    s.feedback = { question: pending.question, ...answer, answerIndex: command.answerIndex };
     event(s, {
       kind: 'trivia',
       playerId: command.playerId,

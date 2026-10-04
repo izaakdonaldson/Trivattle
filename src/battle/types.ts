@@ -74,6 +74,7 @@ export type Pending = {
   question: PublicQuestion;
 };
 export type Feedback = {
+  answerIndex: number;
   question: PublicQuestion;
   correct: boolean;
   correctIndex: number;

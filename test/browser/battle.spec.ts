@@ -12,7 +12,7 @@ async function defend(page: Page) {
   await expect(page.locator('.result-icon')).toBeVisible();
 }
 test('team setup, inspection, keyboard handoff, full battle and rematch', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/#/lab');
   await expect(page.getByText('10 cards', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Inspect Fixture Observatory 1', exact: true }).click();
   await expect(page.getByRole('dialog')).toContainText('base power');
@@ -52,7 +52,7 @@ test('team setup, inspection, keyboard handoff, full battle and rematch', async 
   await expect(page.locator('.defeated')).toHaveCount(0);
 });
 test('mobile, rarity visuals, type crops and reduced motion', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/#/lab');
   await expect(page.locator('.card')).toHaveCount(10);
   await page.screenshot({ path: 'test-results/catalogue-desktop.png', fullPage: true });
   for (const rarity of ['common', 'uncommon', 'rare', 'epic', 'legendary'])
@@ -105,7 +105,7 @@ test('exhaustion feedback and expired match recovery', async ({ page, request })
       })
     ).json();
   }
-  await page.goto('/');
+  await page.goto('/#/lab');
   await page.evaluate((id) => localStorage.setItem('trivattle-match', id), battle.id);
   await page.reload();
   await page.getByRole('button', { name: 'Continue to Player' }).click();
@@ -135,9 +135,11 @@ test('failed article images retain type artwork; a lost server can be left from 
     await route.fulfill({ response, json: data });
   });
   await page.route('https://image.invalid/**', (route) => route.abort());
-  await page.goto('/');
+  await page.goto('/#/lab');
   await expect(page.locator('.card').first().locator('.art.placeholder')).toBeVisible();
-  await expect(page.locator('.card').first().locator('.article-image')).toHaveCount(0);
+  await expect(page.locator('.card').first().locator('.article-image')).toHaveCount(0, {
+    timeout: 15000,
+  });
   await page.getByRole('button', { name: 'Quick battle' }).click();
   await attack(page);
   await page.getByRole('button', { name: 'Ready for Trivia' }).click();
@@ -157,7 +159,7 @@ test('failed article images retain type artwork; a lost server can be left from 
 test('article details follow the active player and attacks have a prominent announcement', async ({
   page,
 }) => {
-  await page.goto('/');
+  await page.goto('/#/lab');
   await page.getByRole('button', { name: 'Inspect Fixture Observatory 1', exact: true }).click();
   await expect(page.getByText('About this article')).toBeVisible();
   await expect(page.getByRole('link', { name: 'Read the Wikipedia article' })).toBeVisible();
@@ -186,7 +188,7 @@ test('article details follow the active player and attacks have a prominent anno
 test('battle cards select directly, info stays separate, and matchup labels sit outside cards', async ({
   page,
 }) => {
-  await page.goto('/');
+  await page.goto('/#/lab');
   await page.getByRole('button', { name: 'Quick battle' }).click();
   const own = page.locator('.own .card').first(),
     enemy = page.locator('.opponent .card').first();
@@ -210,4 +212,39 @@ test('battle cards select directly, info stays separate, and matchup labels sit 
     .locator('.art')
     .evaluate((e) => ({ width: e.clientWidth, height: e.clientHeight }));
   expect(size.width / size.height).toBeCloseTo(1.85, 1);
+});
+
+test('article artwork retries a temporary failure and remains visible after remount', async ({
+  page,
+}) => {
+  await page.route('**/api/cards?*', async (route) => {
+    const response = await route.fetch();
+    const data = await response.json();
+    data.cards[0].image = {
+      url: 'https://upload.wikimedia.org/wikipedia/commons/a/a1/Test.png',
+      alt: 'Test artwork',
+    };
+    await route.fulfill({ response, json: data });
+  });
+  let attempts = 0;
+  await page.route('**/api/card-art/**', async (route) => {
+    attempts++;
+    if (attempts === 1) await route.fulfill({ status: 503 });
+    else
+      await route.fulfill({
+        contentType: 'image/png',
+        body: Buffer.from(
+          'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a9L8AAAAASUVORK5CYII=',
+          'base64',
+        ),
+      });
+  });
+  await page.goto('/#/lab');
+  await expect(page.locator('.card').first().locator('.article-image.loaded')).toBeVisible({
+    timeout: 10000,
+  });
+  await page.getByRole('button', { name: 'Inspect Fixture Observatory 1', exact: true }).click();
+  await expect(page.locator('dialog .article-image.loaded')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('.card').first().locator('.article-image.loaded')).toBeVisible();
 });

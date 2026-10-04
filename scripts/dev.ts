@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { spawn } from 'node:child_process';
 const children = [
   spawn('node', ['--import', 'tsx', 'src/battle/server.ts'], { stdio: 'inherit' }),

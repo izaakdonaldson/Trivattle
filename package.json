@@ -5,7 +5,7 @@
   "type": "module",
   "description": "Offline Wikipedia card and validated trivia catalogue",
   "scripts": {
-    "build": "tsc && mkdir -p dist/config && cp config/*.json dist/config/ && vite build --config web/vite.config.ts",
+    "build": "tsc && mkdir -p dist/config dist/migrations && cp config/*.json dist/config/ && cp migrations/*.sql dist/migrations/ && vite build --config web/vite.config.ts",
     "check": "tsc --noEmit && tsc -p web/tsconfig.json",
     "test": "tsx --test test/*.test.ts",
     "cards": "tsx src/cli.ts",
@@ -14,12 +14,14 @@
     "dev": "tsx scripts/dev.ts",
     "start": "node dist/src/battle/server.js",
     "test:browser": "playwright test",
-    "cards:images": "tsx scripts/refresh-images.ts"
+    "cards:images": "tsx scripts/refresh-images.ts",
+    "db:migrate": "tsx scripts/migrate.ts"
   },
   "engines": {
-    "node": ">=22"
+    "node": ">=24"
   },
   "dependencies": {
+    "better-auth": "^1.7.7",
     "cheerio": "^1.1.2",
     "commander": "^14.0.0",
     "dotenv": "^17.2.3",
@@ -27,6 +29,8 @@
     "proper-lockfile": "^4.1.2",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
+    "socket.io": "^4.8.4",
+    "socket.io-client": "^4.8.4",
     "zod": "^4.1.11"
   },
   "devDependencies": {

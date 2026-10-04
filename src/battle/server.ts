@@ -1,3 +1,6 @@
+import 'dotenv/config';
+import { CardArtCache } from '../card-art.js';
+import { createApplication, type Application } from '../player/application.js';
 import { createServer, type IncomingMessage } from 'node:http';
 import { randomInt, randomUUID } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
@@ -40,6 +43,9 @@ export function battleServer(
     choose?: (n: number) => number;
     now?: () => number;
     webRoot?: string;
+    application?: Application;
+    imageCache?: CardArtCache;
+    localLab?: boolean;
   } = {},
 ) {
   const store =
@@ -47,6 +53,8 @@ export function battleServer(
     config = options.config ?? loadConfig();
   const choose = options.choose ?? randomInt,
     now = options.now ?? Date.now;
+  const imageCache =
+    options.imageCache ?? new CardArtCache(process.env.IMAGE_CACHE_DIR ?? 'data/art-cache');
   const matches = new Map<string, { state: BattleState; data: Catalogue; touched: number }>();
   let cards = playable(store, config);
   const stamp = () => {
@@ -76,9 +84,34 @@ export function battleServer(
       res.end(JSON.stringify(value));
     };
     try {
+      const artPath = /^\/api\/card-art\/([^/?]+)$/.exec(
+        new URL(req.url ?? '/', 'http://localhost').pathname,
+      );
+      if (artPath && req.method === 'GET') {
+        refreshCards();
+        const card = store.data.cards[decodeURIComponent(artPath[1]!)];
+        const image = card && store.data.sources[card.sourceKey]?.image;
+        if (!image) throw new BattleError('Card image unavailable', 404);
+        try {
+          const art = await imageCache.get(image.url);
+          res.writeHead(200, {
+            'Content-Type': art.contentType,
+            'Cache-Control': 'public, max-age=86400',
+            'X-Content-Type-Options': 'nosniff',
+          });
+          res.end(art.bytes);
+        } catch {
+          res.writeHead(503, { 'Cache-Control': 'no-store', 'Retry-After': '2' });
+          res.end();
+        }
+        return;
+      }
+      if (options.application && (await options.application.handle(req, res))) return;
       const url = new URL(req.url ?? '/', 'http://localhost');
       for (const [id, match] of matches) if (now() - match.touched > 7200000) matches.delete(id);
       if (url.pathname.startsWith('/api/')) {
+        if (!(options.localLab ?? !options.application))
+          throw new BattleError('Endpoint not found', 404);
         if (req.headers.origin && new URL(req.headers.origin).host !== req.headers.host)
           throw new BattleError('Cross-origin request rejected', 403);
         if (url.pathname === '/api/cards' && req.method === 'GET') {
@@ -208,11 +241,41 @@ export function battleServer(
       });
     }
   });
+  options.application?.attach(server);
   return server;
 }
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const port = Number(process.env.PORT ?? 3001);
-  battleServer().listen(port, '127.0.0.1', () =>
+  const store = new CatalogueStore(process.env.CARD_DATA_DIR ?? 'data/catalogue', true);
+  const config = loadConfig();
+  let stamp = '';
+  const refresh = () => {
+    let next = 'missing';
+    try {
+      const stat = statSync(store.path);
+      next = `${stat.mtimeMs}:${stat.size}`;
+    } catch {
+      /* Surface catalogue prerequisites during onboarding. */
+    }
+    if (next !== stamp) {
+      store.refresh();
+      stamp = next;
+    }
+  };
+  const application = await createApplication({
+    store,
+    config,
+    refresh,
+    dbPath: process.env.PLAYER_DB ?? 'data/player/player.sqlite',
+    baseURL: process.env.BETTER_AUTH_URL ?? 'http://localhost:5173',
+    secret: process.env.BETTER_AUTH_SECRET ?? '',
+  });
+  battleServer({
+    store,
+    config,
+    application,
+    localLab: process.env.LOCAL_BATTLE_LAB === 'true' && process.env.NODE_ENV !== 'production',
+  }).listen(port, process.env.HOST ?? '127.0.0.1', () =>
     console.log(`Trivattle: http://localhost:${port}`),
   );
 }

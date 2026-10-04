@@ -23,27 +23,30 @@ export function cardView(card: Card, data: Catalogue): CardView {
   });
 }
 export function playable(store: CatalogueStore, config: Config): Card[] {
-  return new CachedCatalogue(store, config).getCards().filter((c) => {
-    const source = store.data.sources[c.sourceKey];
-    return (
-      cardSchema.safeParse(c).success &&
-      sourceSchema.safeParse(source).success &&
-      source?.pageId === c.pageId &&
-      c.hp > 0 &&
-      c.defense >= 0 &&
-      c.attacks.every((a) => a.power > 0) &&
-      c.questionIds.length >= config.trivia.min &&
-      c.questionIds.length <= config.trivia.max &&
-      c.questionIds.every((id) => {
-        const q = store.data.questions[id];
-        return (
-          questionSchema.safeParse(q).success &&
-          q?.pageId === c.pageId &&
-          q.revisionId === source.revisionId
-        );
-      })
-    );
-  });
+  return new CachedCatalogue(store, config).getCards().filter((c) => isPlayable(c, store, config));
+}
+export function isPlayable(c: Card, store: CatalogueStore, config: Config): boolean {
+  const source = store.data.sources[c.sourceKey];
+  return (
+    c.status === 'published' &&
+    !store.data.quarantined[c.versionId] &&
+    cardSchema.safeParse(c).success &&
+    sourceSchema.safeParse(source).success &&
+    source?.pageId === c.pageId &&
+    c.hp > 0 &&
+    c.defense >= 0 &&
+    c.attacks.every((a) => a.power > 0) &&
+    c.questionIds.length >= config.trivia.min &&
+    c.questionIds.length <= config.trivia.max &&
+    c.questionIds.every((id) => {
+      const q = store.data.questions[id];
+      return (
+        questionSchema.safeParse(q).success &&
+        q?.pageId === c.pageId &&
+        q.revisionId === source.revisionId
+      );
+    })
+  );
 }
 // Pin only the selected catalogue records, never generation jobs or provider data.
 export function pin(store: CatalogueStore, cards: Card[]): Catalogue {

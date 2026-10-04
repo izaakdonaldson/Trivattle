@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useId, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, useId, type ReactNode } from 'react';
 import {
   Flame,
   HeartPlus,
@@ -60,13 +60,22 @@ export function TypeIcon({ type }: { type: string }) {
   );
 }
 export function Art({ card }: { card: CardView }) {
+  return <CardArt key={`${card.versionId}:${card.image?.url ?? card.type}`} card={card} />;
+}
+function CardArt({ card }: { card: CardView }) {
   const [failed, setFailed] = useState(false),
-    [loaded, setLoaded] = useState(false);
+    [loaded, setLoaded] = useState(false),
+    [attempt, setAttempt] = useState(0);
+  const img = useRef<HTMLImageElement>(null),
+    timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const [x, y] = pictures[card.type]!;
-  useEffect(() => {
-    setFailed(false);
-    setLoaded(false);
-  }, [card.image?.url]);
+  useLayoutEffect(() => {
+    if (img.current?.complete && img.current.naturalWidth > 0) setLoaded(true);
+  }, [attempt]);
+  useEffect(() => () => clearTimeout(timer.current), []);
+  const src = card.image
+    ? `/api/card-art/${encodeURIComponent(card.versionId)}?image=${encodeURIComponent(card.image.url)}&attempt=${attempt}`
+    : '';
   return (
     <div
       role="img"
@@ -76,12 +85,18 @@ export function Art({ card }: { card: CardView }) {
     >
       {card.image && !failed && (
         <img
+          ref={img}
           className={`article-image ${loaded ? 'loaded' : ''}`}
-          src={card.image.url}
+          src={src}
           alt=""
           loading="lazy"
           onLoad={() => setLoaded(true)}
-          onError={() => setFailed(true)}
+          onError={() => {
+            if (attempt < 2) {
+              clearTimeout(timer.current);
+              timer.current = setTimeout(() => setAttempt((n) => n + 1), 2500 * (attempt + 1));
+            } else setFailed(true);
+          }}
         />
       )}
     </div>
@@ -97,8 +112,12 @@ export function Card({
   attackId,
   disabled,
   children,
+  selectOnCard = false,
+  hideSelectButton = false,
 }: {
   card: CardView;
+  selectOnCard?: boolean;
+  hideSelectButton?: boolean;
   unit?: Unit;
   selected?: boolean;
   onInspect: () => void;
@@ -143,10 +162,10 @@ export function Card({
     <article
       ref={ref}
       aria-label={card.name}
-      className={`card ${card.rarity} ${selected ? 'selected' : ''} ${dead ? 'defeated' : ''} ${unit && !disabled && !dead ? 'selectable' : ''}`}
+      className={`card ${card.rarity} ${selected ? 'selected' : ''} ${dead ? 'defeated' : ''} ${(unit || selectOnCard) && !disabled && !dead ? 'selectable' : ''}`}
       onClick={(e) => {
         if ((e.target as Element).closest('button')) return;
-        if (unit) {
+        if (unit || selectOnCard) {
           if (!disabled && !dead) onSelect?.();
         } else onInspect();
       }}
@@ -169,10 +188,10 @@ export function Card({
       </header>
       <button
         className="card-cover"
-        onClick={unit ? onSelect : onInspect}
-        disabled={unit ? disabled || dead : false}
-        aria-label={`${unit ? 'Select' : 'View'} ${card.name}`}
-        aria-pressed={unit ? !!selected : undefined}
+        onClick={unit || selectOnCard ? onSelect : onInspect}
+        disabled={unit || selectOnCard ? disabled || dead : false}
+        aria-label={`${unit || selectOnCard ? 'Select' : 'View'} ${card.name}`}
+        aria-pressed={unit || selectOnCard ? !!selected : undefined}
       >
         <Art card={card} />
       </button>
@@ -250,7 +269,7 @@ export function Card({
           )}
         </div>
       )}
-      {onSelect && !unit && (
+      {onSelect && !unit && !hideSelectButton && (
         <button className="select-card" disabled={disabled || dead} onClick={onSelect}>
           {children ?? (selected ? 'Selected' : 'Choose card')}
         </button>
@@ -259,11 +278,15 @@ export function Card({
   );
 }
 export function Dialog({
+  hideTitle = false,
+  className,
   title,
   children,
   onClose,
 }: {
   title: string;
+  hideTitle?: boolean;
+  className?: string;
   children: ReactNode;
   onClose?: () => void;
 }) {
@@ -275,6 +298,7 @@ export function Dialog({
   }, []);
   return (
     <dialog
+      className={className}
       aria-labelledby={titleId}
       ref={ref}
       onCancel={(e) => {
@@ -282,7 +306,7 @@ export function Dialog({
         onClose?.();
       }}
     >
-      <div className="dialog-heading">
+      <div className={hideTitle ? 'visually-hidden' : 'dialog-heading'}>
         <h2 id={titleId}>{title}</h2>
         {onClose && (
           <button aria-label="Close dialog" onClick={onClose}>

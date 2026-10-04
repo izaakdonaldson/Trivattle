@@ -6,3 +6,7 @@ data/catalogue/
 
 test-results/
 playwright-report/
+
+data/player/
+
+data/art-cache/
