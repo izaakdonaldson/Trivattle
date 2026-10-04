@@ -9,11 +9,15 @@ export function OwnedGrid({
   selected = [],
   refresh = 0,
   catalogue = false,
+  tradeId,
+  selectionDisabled = false,
 }: {
   select?: (c: Owned) => void;
   selected?: string[];
   refresh?: number;
   catalogue?: boolean;
+  tradeId?: string;
+  selectionDisabled?: boolean;
 }) {
   const [q, setQ] = useState(''),
     [type, setType] = useState(''),
@@ -29,6 +33,8 @@ export function OwnedGrid({
   useEffect(() => {
     let active = true;
     setLoading(true);
+    const invalidate = () => setRetry((n) => n + 1);
+    addEventListener('trivattle:inventory', invalidate);
     const timer = setTimeout(() => {
       api<Collection>(
         `${catalogue ? '/api/catalogue' : '/api/me/collection'}?${new URLSearchParams({ q, type, rarity, sort, direction, page: String(page), grouped: 'false' })}`,
@@ -48,6 +54,7 @@ export function OwnedGrid({
     }, 180);
     return () => {
       active = false;
+      removeEventListener('trivattle:inventory', invalidate);
       clearTimeout(timer);
     };
   }, [q, type, rarity, sort, direction, page, refresh, catalogue, !!select, retry]);
@@ -128,7 +135,13 @@ export function OwnedGrid({
                 onInspect={() => setInspected(c.card)}
                 onSelect={select ? () => select(c) : undefined}
                 selected={selected.includes(c.id)}
-                disabled={!c.playable || selected.includes(c.id)}
+                disabled={
+                  selectionDisabled ||
+                  !c.playable ||
+                  selected.includes(c.id) ||
+                  (!!select && !!c.reservedTradeId && c.reservedTradeId !== tradeId) ||
+                  (!!tradeId && !!c.battleCommitted)
+                }
               >
                 {selected.includes(c.id)
                   ? `In slot ${selected.indexOf(c.id) + 1}`
@@ -144,9 +157,15 @@ export function OwnedGrid({
                 </span>
               )}
               {select && selected.includes(c.id) && (
-                <strong>In slot {selected.indexOf(c.id) + 1}</strong>
+                <strong>
+                  {tradeId ? 'In your offer' : 'In slot ' + (selected.indexOf(c.id) + 1)}
+                </strong>
               )}
-              {!c.playable && <span>Unavailable for battle</span>}
+              {!!select && c.reservedTradeId && c.reservedTradeId !== tradeId && (
+                <span>Reserved for another trade</span>
+              )}
+              {tradeId && c.battleCommitted && <span>Committed to a battle</span>}
+              {!c.playable && <span>Card unavailable</span>}
             </div>
           </div>
         ))}

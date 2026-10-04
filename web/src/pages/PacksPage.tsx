@@ -1,37 +1,80 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Sparkles, PackageOpen } from 'lucide-react';
-import type { Opening } from '../../../src/player/types';
+import type { Opening, PackInfo } from '../../../src/player/types';
 import type { CardView } from '../../../src/battle/types';
 import { Card, CardDetails } from '../Card';
 import { api, message, requestId } from '../api';
-type Info = {
-  packs: number;
-  available: boolean;
-  missing: string[];
-  policy: string;
-  odds: Record<string, number>;
-};
 export function PacksPage({ userId, onOpened }: { userId: string; onOpened: () => void }) {
-  const [info, setInfo] = useState<Info | null>(null),
+  const [info, setInfo] = useState<PackInfo | null>(null),
     [result, setResult] = useState<Opening | null>(null),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(''),
     [shown, setShown] = useState(0),
     [skipped, setSkipped] = useState(false),
     [inspected, setInspected] = useState<CardView | null>(null),
-    [history, setHistory] = useState<Opening[]>([]);
+    [history, setHistory] = useState<Opening[]>([]),
+    [remaining, setRemaining] = useState<number | null>(null),
+    [packNotice, setPackNotice] = useState('');
+  const lastPacks = useRef<number | null>(null),
+    loadSerial = useRef(0);
   const keyName = `trivattle-pack-${userId}`;
   const load = () => {
-    api<Info>('/api/me/packs')
-      .then(setInfo)
+    const serial = ++loadSerial.current;
+    api<PackInfo>('/api/me/packs')
+      .then((v) => {
+        if (serial !== loadSerial.current) return;
+        if (lastPacks.current !== null && v.packs > lastPacks.current)
+          setPackNotice('New free packs are ready!');
+        lastPacks.current = v.packs;
+        setInfo(v);
+        setRemaining(v.nextPackAt === null ? null : Math.max(0, v.nextPackAt - v.serverTime));
+      })
       .catch((e) => setError(message(e)));
     api<Opening[]>('/api/me/pack-openings')
-      .then(setHistory)
+      .then((v) => {
+        if (serial === loadSerial.current) setHistory(v);
+      })
       .catch((e) => setError(message(e)));
   };
+  useEffect(() => {
+    if (!info) return;
+    const received = performance.now();
+    let requested = false;
+    const tick = () => {
+      if (info.nextPackAt === null) {
+        setRemaining(null);
+        return;
+      }
+      const ms = Math.max(0, info.nextPackAt - info.serverTime - (performance.now() - received));
+      setRemaining(ms);
+      if (!ms && !requested && !document.hidden) {
+        requested = true;
+        load();
+      }
+    };
+    tick();
+    const timer = setInterval(tick, 1000);
+    return () => clearInterval(timer);
+  }, [info]);
+  useEffect(() => {
+    const refresh = () => {
+      if (!document.hidden) load();
+    };
+    const timer = setInterval(refresh, 30000);
+    addEventListener('focus', refresh);
+    addEventListener('trivattle:inventory', refresh);
+    document.addEventListener('visibilitychange', refresh);
+    return () => {
+      clearInterval(timer);
+      removeEventListener('focus', refresh);
+      removeEventListener('trivattle:inventory', refresh);
+      document.removeEventListener('visibilitychange', refresh);
+    };
+  }, []);
   async function open(recover = false) {
     setBusy(true);
     setError('');
+    setPackNotice('');
     const key = localStorage.getItem(keyName) ?? requestId();
     localStorage.setItem(keyName, key);
     try {
@@ -71,6 +114,17 @@ export function PacksPage({ userId, onOpened }: { userId: string; onOpened: () =
           {info?.packs ?? '…'} packs remaining
         </span>
       </div>
+      <p className="pack-countdown" role="status">
+        Your packs: {info?.packs ?? '…'} / {info?.capacity ?? 3} ·{' '}
+        {remaining === null
+          ? 'Packs Full — Open one to begin regenerating!'
+          : `Next free pack: ${String(Math.floor(Math.ceil(remaining / 1000) / 60)).padStart(2, '0')}:${String(Math.ceil(remaining / 1000) % 60).padStart(2, '0')}`}
+      </p>
+      {packNotice && (
+        <p className="notice" role="status">
+          {packNotice}
+        </p>
+      )}
       {error && (
         <p role="alert" className="error">
           {error}

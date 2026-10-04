@@ -1,5 +1,8 @@
 import { z } from 'zod';
 export const playerConfigSchema = z.object({
+  packRegenMs: z.number().int().positive().default(300000),
+  packCapacity: z.number().int().positive().default(3),
+  tradeExpiryMs: z.number().int().positive().default(1800000),
   starterPacks: z.number().int().min(0).default(3),
   weights: z
     .tuple([z.number(), z.number(), z.number(), z.number(), z.number()])
@@ -19,6 +22,9 @@ export const playerConfigSchema = z.object({
 export type PlayerConfig = z.infer<typeof playerConfigSchema>;
 export function playerConfig() {
   return playerConfigSchema.parse({
+    packRegenMs: process.env.PACK_REGEN_MS ? Number(process.env.PACK_REGEN_MS) : undefined,
+    packCapacity: process.env.PACK_CAPACITY ? Number(process.env.PACK_CAPACITY) : undefined,
+    tradeExpiryMs: process.env.TRADE_EXPIRY_MS ? Number(process.env.TRADE_EXPIRY_MS) : undefined,
     starterPacks: process.env.STARTER_PACKS ? Number(process.env.STARTER_PACKS) : undefined,
     weights: process.env.PACK_WEIGHTS ? JSON.parse(process.env.PACK_WEIGHTS) : undefined,
     emptyPool: process.env.PACK_EMPTY_POOL,

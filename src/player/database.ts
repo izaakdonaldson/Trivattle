@@ -25,10 +25,17 @@ export function transaction<T>(db: DatabaseSync, fn: () => T): T {
 }
 export function migrate(db: DatabaseSync) {
   db.exec('CREATE TABLE IF NOT EXISTS app_migrations (version INTEGER PRIMARY KEY)');
-  if (!db.prepare('SELECT version FROM app_migrations WHERE version=1').get()) {
+  for (const [index, file] of [
+    '001-player.sql',
+    '002-pack-regen.sql',
+    '003-friends.sql',
+    '004-trades.sql',
+  ].entries()) {
+    const version = index + 1;
+    if (db.prepare('SELECT version FROM app_migrations WHERE version=?').get(version)) continue;
     transaction(db, () => {
-      db.exec(readFileSync(new URL('../../migrations/001-player.sql', import.meta.url), 'utf8'));
-      db.prepare('INSERT INTO app_migrations VALUES (1)').run();
+      db.exec(readFileSync(new URL('../../migrations/' + file, import.meta.url), 'utf8'));
+      db.prepare('INSERT INTO app_migrations VALUES (?)').run(version);
     });
   }
 }

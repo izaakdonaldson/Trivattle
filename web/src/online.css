@@ -896,3 +896,143 @@ dialog.online-attack-dialog {
     font-size: 19px;
   }
 }
+
+.pack-countdown {
+  padding: 14px 18px;
+  background: #eee9fc;
+  border-radius: 12px;
+  color: #513b8c;
+}
+.friend-search,
+.social-actions,
+.trade-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.friend-search input {
+  margin: 0 10px;
+}
+.social-section {
+  margin: 32px 0;
+}
+.social-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  padding: 20px;
+  margin: 12px 0;
+  background: white;
+  border: 1px solid #e1dcef;
+  border-radius: 12px;
+}
+.social-row small {
+  display: block;
+  color: var(--muted);
+  margin-top: 6px;
+}
+.trade-link {
+  text-decoration: none;
+  color: inherit;
+}
+.trade-columns,
+.trade-review {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+.trade-offer {
+  min-width: 0;
+  border: 1px solid #ddd5ef;
+  padding: 20px;
+  border-radius: 16px;
+  background: #fff9;
+}
+.trade-offer h2 small {
+  color: var(--muted);
+  font-size: 14px;
+}
+.trade-offer .card-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
+}
+.trade-offer .card-grid > div {
+  max-width: 290px;
+}
+.trade-offer button {
+  margin-top: 8px;
+}
+.trade-controls,
+.trade-picker {
+  margin-top: 30px;
+}
+.trade-controls {
+  justify-content: center;
+}
+.trade-invitation {
+  padding: 32px;
+  background: white;
+  border-radius: 16px;
+}
+.trade-invitation button {
+  margin: 12px 12px 0 0;
+}
+.confirmed {
+  color: #16713e;
+  font-weight: 700;
+}
+.trade-review {
+  gap: 14px;
+  margin-bottom: 22px;
+}
+.trade-review .card {
+  margin-bottom: 8px;
+}
+.trade-review section > div {
+  margin-bottom: 16px;
+}
+@media (max-width: 900px) {
+  .app-nav {
+    flex-wrap: wrap;
+    height: auto;
+    padding: 16px;
+  }
+  .nav-links {
+    order: 3;
+    flex-basis: 100%;
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 4px;
+  }
+  .nav-links a {
+    justify-content: center;
+    padding: 10px 3px;
+  }
+  .nav-links a > svg {
+    display: none;
+  }
+  .account-nav {
+    margin-left: auto;
+  }
+}
+@media (max-width: 600px) {
+  .nav-links {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .trade-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .social-row {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .friend-search input {
+    margin: 10px 0;
+    width: 100%;
+  }
+  .friend-search label {
+    width: 100%;
+  }
+}

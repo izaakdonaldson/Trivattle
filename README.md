@@ -38,7 +38,7 @@ Internet hosting requires HTTPS, a websocket-capable reverse proxy, a stable aut
 - `CARD_DATA_DIR` defaults to `data/catalogue`; the offline generator uses `CARD_CATALOGUE`. Point both at the same catalogue when overriding paths. Runtime gameplay never calls card/trivia providers.
 - `BETTER_AUTH_SECRET` is required and must contain at least 32 characters. Keep it stable across restarts. Never put it in Vite-prefixed variables or commit it.
 - `BETTER_AUTH_URL` is the browser-facing origin, also used as the trusted origin. Sessions are database-backed, and revoked/expired sessions cannot continue realtime actions.
-- `STARTER_PACKS=3`; `PACK_WEIGHTS=[55,28,12,4,1]` in Common→Legendary order; `PACK_EMPTY_POOL=reject` by default. `renormalize` explicitly removes empty pools and displays adjusted odds. No guaranteed rarity, pack refill/reset endpoint, payments, or currency.
+- `STARTER_PACKS=3`; `PACK_WEIGHTS=[55,28,12,4,1]` in Common→Legendary order; `PACK_EMPTY_POOL=reject` by default. `renormalize` explicitly removes empty pools and displays adjusted odds. No guaranteed rarity, manual pack refill/reset endpoint, payments, or currency.
 - `RECONNECT_MS=120000`, `LOBBY_IDLE_MS=1800000`, `BATTLE_IDLE_MS=7200000`. Results are retained in memory for ten minutes.
 - `HOST=127.0.0.1`, `PORT=3001`. Keep port 3001 with the default Vite proxy.
 
@@ -49,6 +49,30 @@ Onboarding grants pack entitlements only, independently of catalogue availabilit
 Pack requests commit all five copies and decrement one entitlement in a transaction. The browser saves a request key before opening; response loss or refresh retries that key without awarding twice. Recent openings can be viewed from the Packs page. Reveal order is Common through Legendary, independent of sampling order. Reveal one card at a time with Next card, then view the five-card summary. Collection shows every owned copy, ordered by rarity and newest acquisition. All cards browses the entire playable catalogue with search, type/rarity filters and pagination.
 
 Images are served through `/api/card-art/:versionId` from validated Wikimedia sources. `IMAGE_CACHE_DIR` defaults to `data/art-cache`; successful images persist across restarts. Requests share downloads, retry the alternate Wikimedia host, and browser failures retry twice. Cards without representative image metadata retain type artwork.
+
+### Free packs, friends, and trading
+
+Accounts regenerate one pack every five minutes, up to three unopened packs. Configure `PACK_REGEN_MS=300000` and `PACK_CAPACITY=3`. Reconciliation uses the server clock and SQLite transactions on account/pack requests, including opening. Offline time counts; time spent full does not. Opening from full begins a new countdown, while opening below capacity retains partial progress. The browser countdown is informational and refetches authoritative status; there is no per-player background job.
+
+Migration 002 preserves existing balances, including balances above the configured cap. Below-capacity accounts begin accruing at migration time, without retroactive pre-migration credits. Above-capacity accounts retain all packs and resume regeneration only after dropping below capacity. Starter grants remain exactly once. Migration files are applied in order at startup and by `npm run db:migrate`; back up the existing database before upgrading.
+
+The Friends page shows your unique shareable eight-character friend code. Lookup is exact (case and hyphens are ignored), and exposes display names and friend codes only. Request recipients accept/decline, senders cancel, and either accepted friend can remove the relationship. Removing a friend cancels unfinished trades between those players.
+
+Trading is available only between accepted friends. Each side offers one to five individual owned copies; duplicate definitions are allowed as separate instances. Offers reserve their cards against other trades and lobby selection. Cards already selected in a live lobby or battle cannot be offered. Editing either offer clears both confirmations. The final confirmation dialog shows exactly what you give and receive.
+
+Both participants must remain authenticated and connected to complete. Closing one of several connected tabs keeps presence; disconnecting the last tab or revoking a confirming session clears both confirmations. Reconnect to review retained offers and confirm again. Incomplete trades expire after `TRADE_EXPIRY_MS=1800000` (30 minutes from invitation); edits do not extend this deadline. Each account can have up to ten unfinished trades.
+
+Settlement transfers existing instance IDs in one `BEGIN IMMEDIATE` transaction and records immutable transfer history. Failure rolls back all transfers. Request IDs and revisions protect retries and concurrent confirmations. Trades, offers, reservations, completed history, and pack balances survive restart; unfinished confirmations are cleared. Runtime still requires **one server process** because battle commitments and socket presence are in memory. No permanent teams, gifts, currency, or card-definition changes are introduced.
+
+Authenticated social endpoints:
+
+- `GET /api/players/by-code/:code`; `GET /api/friends?page=1`.
+- `POST /api/friends/requests` with a code; `POST /api/friends/:id` with action and revision.
+- `GET /api/trades?history=false&page=1`; `GET /api/trades/:id`.
+- `POST /api/trades` with friendId/requestId; `POST /api/trades/:id` with requestId, revision, and action (`accept`, `reject`, `offer`, `confirm`, `cancel`). Offer replacement supplies instance IDs; confirmation supplies offerRevision.
+- Existing pack status adds capacity, intervalMs, serverTime and nextPackAt. Opening responses include current packStatus; historical opening rewards retain original acquisition metadata after trading.
+
+The existing authenticated Socket.IO connection emits participant-only `friends:updated`, `trade:updated`, and `inventory:updated` invalidations. Clients refetch state on reconnect; sockets never perform ownership transfers. The existing global maintenance sweep handles trade expiry and session checks. The fake-clock endpoint used by Playwright exists only in its isolated fixture server and is absent from the application server.
 
 ### Multiplayer boundaries
 

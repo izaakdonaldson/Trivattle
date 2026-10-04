@@ -19,6 +19,11 @@ export function weightedIndex(weights: number[], choose: (n: number) => number) 
   throw Error('Invalid random selection');
 }
 export class Inventory {
+  battleCommitted: (id: string) => boolean = () => false;
+  reservedTrade(id: string) {
+    return this.db.prepare('SELECT trade_id FROM trade_reservations WHERE instance_id=?').get(id)
+      ?.trade_id as string | undefined;
+  }
   constructor(
     readonly db: DatabaseSync,
     readonly store: CatalogueStore,
@@ -28,10 +33,41 @@ export class Inventory {
     readonly choose = randomInt,
     readonly now = Date.now,
   ) {}
+  /** Caller must hold the write transaction when reconcile/consume are combined. */
+  reconcile(user: string) {
+    const row = this.db
+      .prepare('SELECT packs,cooldown_anchor FROM inventory WHERE user_id=?')
+      .get(user);
+    const now = this.now(),
+      capacity = this.settings.packCapacity,
+      intervalMs = this.settings.packRegenMs;
+    let packs = Number(row?.packs ?? 0),
+      anchor = row?.cooldown_anchor == null ? null : Number(row.cooldown_anchor);
+    if (row) {
+      if (packs >= capacity) anchor = null;
+      else {
+        anchor ??= now;
+        const earned = Math.floor(Math.max(0, now - anchor) / intervalMs);
+        packs = Math.min(capacity, packs + earned);
+        anchor = packs >= capacity ? null : anchor + earned * intervalMs;
+      }
+      this.db
+        .prepare('UPDATE inventory SET packs=?,cooldown_anchor=? WHERE user_id=?')
+        .run(packs, anchor, user);
+    }
+    return {
+      packs,
+      capacity,
+      intervalMs,
+      serverTime: now,
+      nextPackAt: row && anchor !== null ? anchor + intervalMs : null,
+    };
+  }
+  packStatus(user: string) {
+    return transaction(this.db, () => this.reconcile(user));
+  }
   balance(user: string) {
-    return Number(
-      this.db.prepare('SELECT packs FROM inventory WHERE user_id=?').get(user)?.packs ?? 0,
-    );
+    return this.packStatus(user).packs;
   }
   onboarded(user: string) {
     return !!this.db.prepare('SELECT user_id FROM starter_grants WHERE user_id=?').get(user);
@@ -40,6 +76,8 @@ export class Inventory {
     const card = this.store.data.cards[row.version_id];
     return {
       id: row.id,
+      reservedTradeId: this.reservedTrade(row.id) ?? null,
+      battleCommitted: this.battleCommitted(row.id),
       versionId: row.version_id,
       acquiredAt: row.acquired_at,
       source: row.source,
@@ -61,6 +99,11 @@ export class Inventory {
       throw new BattleError('Choose five different owned copies', 422);
     return ids.map((id) => {
       const owned = this.owned(user, id);
+      if (this.reservedTrade(id))
+        throw new BattleError(
+          'This card is reserved for a trade. Remove it from the offer first.',
+          409,
+        );
       if (!owned.playable)
         throw new BattleError('A selected card is unavailable. Replace it.', 422);
       return this.store.data.cards[owned.versionId]!;
@@ -83,7 +126,13 @@ export class Inventory {
       if (this.onboarded(user)) return;
       const event = randomUUID();
       this.award(user, [], 'starter', event);
-      this.db.prepare('INSERT INTO inventory VALUES (?,?)').run(user, this.settings.starterPacks);
+      this.db
+        .prepare('INSERT INTO inventory (user_id,packs,cooldown_anchor) VALUES (?,?,?)')
+        .run(
+          user,
+          this.settings.starterPacks,
+          this.settings.starterPacks >= this.settings.packCapacity ? null : this.now(),
+        );
       this.db.prepare('INSERT INTO starter_grants VALUES (?,?)').run(user, event);
     });
   }
@@ -102,7 +151,7 @@ export class Inventory {
     const { weights, missing, available } = this.pools();
     const total = weights.reduce((s, x) => s + x, 0);
     return {
-      packs: this.balance(user),
+      ...this.packStatus(user),
       available,
       missing,
       policy: this.settings.emptyPool,
@@ -114,10 +163,16 @@ export class Inventory {
       throw new BattleError('Opening not found', 404);
     const rows = this.db
       .prepare(
-        'SELECT c.* FROM pack_rewards r JOIN owned_cards c ON c.id=r.instance_id WHERE r.opening_id=? ORDER BY r.reveal_slot',
+        "SELECT c.id,c.version_id,a.acquired_at,'pack' AS source FROM pack_rewards r JOIN owned_cards c ON c.id=r.instance_id JOIN acquisitions a ON a.id=r.opening_id WHERE r.opening_id=? ORDER BY r.reveal_slot",
       )
       .all(id) as Row[];
-    return { id, cards: rows.map((r) => this.view(r)) };
+    return {
+      id,
+      cards: rows.map((r) => {
+        const { reservedTradeId, battleCommitted, ...card } = this.view(r);
+        return card;
+      }),
+    };
   }
   history(user: string) {
     return this.db
@@ -133,7 +188,8 @@ export class Inventory {
         .prepare('SELECT id FROM pack_openings WHERE user_id=? AND request_key=?')
         .get(user, key);
       if (prior) return String(prior.id);
-      if (this.balance(user) < 1) throw new BattleError('No packs remaining', 409);
+      const status = this.reconcile(user);
+      if (status.packs < 1) throw new BattleError('No packs remaining', 409);
       const { pools, weights, missing, available } = this.pools();
       if (!available)
         throw new BattleError(
@@ -159,7 +215,16 @@ export class Inventory {
           .prepare('INSERT INTO pack_rewards VALUES (?,?,?,?)')
           .run(opening, slot, reveal, ids[slot]!),
       );
-      this.db.prepare('UPDATE inventory SET packs=packs-1 WHERE user_id=?').run(user);
+      this.db
+        .prepare('UPDATE inventory SET packs=packs-1,cooldown_anchor=? WHERE user_id=?')
+        .run(
+          status.packs >= status.capacity
+            ? status.packs - 1 < status.capacity
+              ? this.now()
+              : null
+            : status.nextPackAt! - status.intervalMs,
+          user,
+        );
       return opening;
     });
     return this.opening(user, id);

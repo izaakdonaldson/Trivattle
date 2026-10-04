@@ -1,5 +1,7 @@
 import type { CardView, BattleView } from '../battle/types.js';
 export type Owned = {
+  reservedTradeId?: string | null;
+  battleCommitted?: boolean;
   id: string;
   versionId: string;
   acquiredAt: string;
@@ -15,8 +17,27 @@ export type Collection = {
   page: number;
   pageSize: number;
 };
-export type Opening = { id: string; cards: Owned[] };
-export type Me = { id: string; name: string; packs: number; onboarded: boolean };
+export type PackStatus = {
+  packs: number;
+  capacity: number;
+  intervalMs: number;
+  serverTime: number;
+  nextPackAt: number | null;
+};
+export type PackInfo = PackStatus & {
+  available: boolean;
+  missing: string[];
+  policy: string;
+  odds: Record<string, number>;
+};
+export type Opening = { id: string; cards: Owned[]; packStatus?: PackStatus };
+export type Me = {
+  friendCode: string;
+  id: string;
+  name: string;
+  packs: number;
+  onboarded: boolean;
+};
 export type LobbyView = {
   id: string;
   code: string;

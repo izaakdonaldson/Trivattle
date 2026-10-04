@@ -6,6 +6,8 @@ import type { LobbyView, Me, Reply } from '../../src/player/types';
 import { api, authClient, message, requestId } from './api';
 import { AuthPage } from './pages/AuthPage';
 import { CollectionPage, CataloguePage } from './pages/CollectionPage';
+import { TradesPage, TradePage } from './pages/TradesPage';
+import { FriendsPage } from './pages/FriendsPage';
 import { PacksPage } from './pages/PacksPage';
 import { LobbyPage } from './pages/LobbyPage';
 import { BattlePage } from './pages/BattlePage';
@@ -20,6 +22,8 @@ function App() {
     [error, setError] = useState(''),
     [busy, setBusy] = useState(false),
     [refresh, setRefresh] = useState(0),
+    [tradeNotice, setTradeNotice] = useState(false),
+    [friendNotice, setFriendNotice] = useState(false),
     [connected, setConnected] = useState(false),
     [code, setCode] = useState('');
   const socket = useRef<Socket | null>(null),
@@ -33,9 +37,14 @@ function App() {
       else localStorage.removeItem(`trivattle-room-${session.user.id}`);
     }
   }
+  const accountId = useRef(session?.user.id);
+  accountId.current = session?.user.id;
   async function bootstrap() {
+    const account = accountId.current;
     try {
-      setMe(await api<Me>('/api/me/bootstrap', {}));
+      const value = await api<Me>('/api/me/bootstrap', {});
+      if (accountId.current !== account) return;
+      setMe(value);
       setError('');
     } catch (e) {
       setError(message(e));
@@ -51,6 +60,8 @@ function App() {
   }, [route]);
   useEffect(() => {
     setMe(null);
+    setTradeNotice(false);
+    setFriendNotice(false);
     apply(null);
     if (!session?.user.id) return;
     let active = true;
@@ -59,6 +70,9 @@ function App() {
     socket.current = s;
     s.on('connect', () => {
       setConnected(true);
+      dispatchEvent(new Event('trivattle:friends'));
+      dispatchEvent(new Event('trivattle:trades'));
+      dispatchEvent(new Event('trivattle:inventory'));
       api<LobbyView | null>('/api/lobbies/current')
         .then((v) => {
           if (active) apply(v);
@@ -66,6 +80,19 @@ function App() {
         .catch((e) => {
           if (active) setError(message(e));
         });
+    });
+    s.on('trade:updated', () => {
+      setTradeNotice(true);
+      dispatchEvent(new Event('trivattle:trades'));
+    });
+    s.on('friends:updated', () => {
+      setFriendNotice(true);
+      dispatchEvent(new Event('trivattle:friends'));
+    });
+    s.on('inventory:updated', () => {
+      void bootstrap();
+      setRefresh((n) => n + 1);
+      dispatchEvent(new Event('trivattle:inventory'));
     });
     s.on('disconnect', (reason) => {
       setConnected(false);
@@ -147,6 +174,20 @@ function App() {
         {session && (
           <>
             <div className="nav-links">
+              <a
+                className={route.startsWith('#/trades') ? 'active' : ''}
+                href="#/trades"
+                onClick={() => setTradeNotice(false)}
+              >
+                Trades {tradeNotice && <small aria-label="New trading activity">•</small>}
+              </a>
+              <a
+                className={route === '#/friends' ? 'active' : ''}
+                href="#/friends"
+                onClick={() => setFriendNotice(false)}
+              >
+                Friends {friendNotice && <small aria-label="New friend activity">•</small>}
+              </a>
               <a className={route === '#/collection' ? 'active' : ''} href="#/collection">
                 <Layers size={16} />
                 Collection
@@ -211,6 +252,12 @@ function App() {
                 api<Me>('/api/me').then(setMe);
               }}
             />
+          ) : route === '#/trades' || route === '#/trades/history' ? (
+            <TradesPage key={route} history={route.endsWith('/history')} />
+          ) : route.startsWith('#/trades/') ? (
+            <TradePage key={route} id={route.split('/')[2]!} connected={connected} />
+          ) : route === '#/friends' ? (
+            <FriendsPage friendCode={me.friendCode} />
           ) : route === '#/catalogue' ? (
             <CataloguePage />
           ) : route === '#/collection' ? (
